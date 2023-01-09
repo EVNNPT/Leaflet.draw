@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Leaflet.draw vector editing handlers</title>
+
+    <script src="libs/leaflet-src.js"></script>
+    <link rel="stylesheet" href="libs/leaflet.css" />
+    <script src="leaflet.draw-src.js"></script>
+    <link rel="stylesheet" href="leaflet.draw-src.css" />
+</head>
+
+<body>
+    <div id="map" style="width: 800px; height: 600px; border: 1px solid #ccc"></div>
+
+    <script>
+        var map = new L.Map('map', { center: new L.LatLng(0, 0), zoom: 18 }),
+            drawnItems = L.featureGroup().addTo(map);
+        L.control.layers({}, { 'drawlayer': drawnItems }, { position: 'topleft', collapsed: false }).addTo(map);
+        map.addControl(new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems,
+                poly: {
+                    allowIntersection: false
+                },
+                edit: true,
+                remove: true,
+            },
+            draw: {
+                polygon: {
+                    allowIntersection: false,
+                    showArea: true
+                }
+            }
+        }));
+
+        map.on(L.Draw.Event.CREATED, function (event) {
+            var layer = event.layer;
+
+            drawnItems.addLayer(layer);
+        });
+
+        const thanhCai = L.thanhCai(L.latLng(0, 0)).addTo(map);
+
+    </script>
+</body>
+
+</html>
