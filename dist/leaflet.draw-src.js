@@ -1,5 +1,5 @@
 /*
- Leaflet.draw 1.0.4+76aab99, a plugin that adds drawing and editing tools to Leaflet powered maps.
+ Leaflet.draw 1.0.4+6832289, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
 
  https://github.com/Leaflet/Leaflet.draw
@@ -6577,16 +6577,16 @@ L.DrawToolbar = L.Toolbar.extend({
 	},
 
 	options: {
-		polyline: {},
-		polygon: {},
-		rectangle: {},
-		circle: {},
-		marker: {},
-		circlemarker: {},
 		role: {},
 		thanhCai: {},
 		mayBienAp: {},
 		duongDay: {},
+		// polyline: {},
+		// polygon: {},
+		// rectangle: {},
+		// circle: {},
+		// marker: {},
+		// circlemarker: {},
 	},
 
 	// @method initialize(): void
@@ -6609,36 +6609,6 @@ L.DrawToolbar = L.Toolbar.extend({
 	getModeHandlers: function (map) {
 		return [
 			{
-				enabled: this.options.polyline,
-				handler: new L.Draw.Polyline(map, this.options.polyline),
-				title: L.drawLocal.draw.toolbar.buttons.polyline,
-			},
-			{
-				enabled: this.options.polygon,
-				handler: new L.Draw.Polygon(map, this.options.polygon),
-				title: L.drawLocal.draw.toolbar.buttons.polygon,
-			},
-			{
-				enabled: this.options.rectangle,
-				handler: new L.Draw.Rectangle(map, this.options.rectangle),
-				title: L.drawLocal.draw.toolbar.buttons.rectangle,
-			},
-			{
-				enabled: this.options.circle,
-				handler: new L.Draw.Circle(map, this.options.circle),
-				title: L.drawLocal.draw.toolbar.buttons.circle,
-			},
-			{
-				enabled: this.options.marker,
-				handler: new L.Draw.Marker(map, this.options.marker),
-				title: L.drawLocal.draw.toolbar.buttons.marker,
-			},
-			{
-				enabled: this.options.circlemarker,
-				handler: new L.Draw.CircleMarker(map, this.options.circlemarker),
-				title: L.drawLocal.draw.toolbar.buttons.circlemarker,
-			},
-			{
 				enabled: this.options.role,
 				handler: new L.Draw.Role(map, this.options.role),
 				title: L.drawLocal.draw.toolbar.buttons.role,
@@ -6658,6 +6628,36 @@ L.DrawToolbar = L.Toolbar.extend({
 				handler: new L.Draw.DuongDay(map, this.options.duongDay),
 				title: L.drawLocal.draw.toolbar.buttons.duongDay,
 			},
+			// {
+			// 	enabled: this.options.polyline,
+			// 	handler: new L.Draw.Polyline(map, this.options.polyline),
+			// 	title: L.drawLocal.draw.toolbar.buttons.polyline,
+			// },
+			// {
+			// 	enabled: this.options.polygon,
+			// 	handler: new L.Draw.Polygon(map, this.options.polygon),
+			// 	title: L.drawLocal.draw.toolbar.buttons.polygon,
+			// },
+			// {
+			// 	enabled: this.options.rectangle,
+			// 	handler: new L.Draw.Rectangle(map, this.options.rectangle),
+			// 	title: L.drawLocal.draw.toolbar.buttons.rectangle,
+			// },
+			// {
+			// 	enabled: this.options.circle,
+			// 	handler: new L.Draw.Circle(map, this.options.circle),
+			// 	title: L.drawLocal.draw.toolbar.buttons.circle,
+			// },
+			// {
+			// 	enabled: this.options.marker,
+			// 	handler: new L.Draw.Marker(map, this.options.marker),
+			// 	title: L.drawLocal.draw.toolbar.buttons.marker,
+			// },
+			// {
+			// 	enabled: this.options.circlemarker,
+			// 	handler: new L.Draw.CircleMarker(map, this.options.circlemarker),
+			// 	title: L.drawLocal.draw.toolbar.buttons.circlemarker,
+			// },
 		];
 	},
 
@@ -6712,35 +6712,41 @@ L.DrawToolbar = L.Toolbar.extend({
  */
 L.EditToolbar = L.Toolbar.extend({
 	statics: {
-		TYPE: 'edit'
+		TYPE: "edit",
 	},
 
 	options: {
 		edit: {
 			selectedPathOptions: {
-				dashArray: '10, 10',
+				dashArray: "10, 10",
 
 				fill: true,
-				fillColor: '#fe57a1',
+				fillColor: "#fe57a1",
 				fillOpacity: 0.1,
 
 				// Whether to user the existing layers color
-				maintainColor: false
-			}
+				maintainColor: false,
+			},
 		},
 		remove: {},
 		poly: null,
-		featureGroup: null /* REQUIRED! TODO: perhaps if not set then all layers on the map are selectable? */
+		featureGroup:
+			null /* REQUIRED! TODO: perhaps if not set then all layers on the map are selectable? */,
 	},
 
 	// @method intialize(): void
 	initialize: function (options) {
 		// Need to set this manually since null is an acceptable value here
 		if (options.edit) {
-			if (typeof options.edit.selectedPathOptions === 'undefined') {
-				options.edit.selectedPathOptions = this.options.edit.selectedPathOptions;
+			if (typeof options.edit.selectedPathOptions === "undefined") {
+				options.edit.selectedPathOptions =
+					this.options.edit.selectedPathOptions;
 			}
-			options.edit.selectedPathOptions = L.extend({}, this.options.edit.selectedPathOptions, options.edit.selectedPathOptions);
+			options.edit.selectedPathOptions = L.extend(
+				{},
+				this.options.edit.selectedPathOptions,
+				options.edit.selectedPathOptions
+			);
 		}
 
 		if (options.remove) {
@@ -6751,7 +6757,7 @@ L.EditToolbar = L.Toolbar.extend({
 			options.poly = L.extend({}, this.options.poly, options.poly);
 		}
 
-		this._toolbarClass = 'leaflet-draw-edit';
+		this._toolbarClass = "leaflet-draw-edit";
 		L.Toolbar.prototype.initialize.call(this, options);
 
 		this._selectedFeatureCount = 0;
@@ -6767,17 +6773,17 @@ L.EditToolbar = L.Toolbar.extend({
 				handler: new L.EditToolbar.Edit(map, {
 					featureGroup: featureGroup,
 					selectedPathOptions: this.options.edit.selectedPathOptions,
-					poly: this.options.poly
+					poly: this.options.poly,
 				}),
-				title: L.drawLocal.edit.toolbar.buttons.edit
+				title: L.drawLocal.edit.toolbar.buttons.edit,
 			},
 			{
 				enabled: this.options.remove,
 				handler: new L.EditToolbar.Delete(map, {
-					featureGroup: featureGroup
+					featureGroup: featureGroup,
 				}),
-				title: L.drawLocal.edit.toolbar.buttons.remove
-			}
+				title: L.drawLocal.edit.toolbar.buttons.remove,
+			},
 		];
 	},
 
@@ -6789,14 +6795,14 @@ L.EditToolbar = L.Toolbar.extend({
 				title: L.drawLocal.edit.toolbar.actions.save.title,
 				text: L.drawLocal.edit.toolbar.actions.save.text,
 				callback: this._save,
-				context: this
+				context: this,
 			},
 			{
 				title: L.drawLocal.edit.toolbar.actions.cancel.title,
 				text: L.drawLocal.edit.toolbar.actions.cancel.text,
 				callback: this.disable,
-				context: this
-			}
+				context: this,
+			},
 		];
 
 		if (handler.removeAllLayers) {
@@ -6804,7 +6810,7 @@ L.EditToolbar = L.Toolbar.extend({
 				title: L.drawLocal.edit.toolbar.actions.clearAll.title,
 				text: L.drawLocal.edit.toolbar.actions.clearAll.text,
 				callback: this._clearAllLayers,
-				context: this
+				context: this,
 			});
 		}
 
@@ -6818,7 +6824,11 @@ L.EditToolbar = L.Toolbar.extend({
 
 		this._checkDisabled();
 
-		this.options.featureGroup.on('layeradd layerremove', this._checkDisabled, this);
+		this.options.featureGroup.on(
+			"layeradd layerremove",
+			this._checkDisabled,
+			this
+		);
 
 		return container;
 	},
@@ -6826,7 +6836,11 @@ L.EditToolbar = L.Toolbar.extend({
 	// @method removeToolbar(): void
 	// Removes the toolbar from the map
 	removeToolbar: function () {
-		this.options.featureGroup.off('layeradd layerremove', this._checkDisabled, this);
+		this.options.featureGroup.off(
+			"layeradd layerremove",
+			this._checkDisabled,
+			this
+		);
 
 		L.Toolbar.prototype.removeToolbar.call(this);
 	},
@@ -6866,15 +6880,15 @@ L.EditToolbar = L.Toolbar.extend({
 			button = this._modes[L.EditToolbar.Edit.TYPE].button;
 
 			if (hasLayers) {
-				L.DomUtil.removeClass(button, 'leaflet-disabled');
+				L.DomUtil.removeClass(button, "leaflet-disabled");
 			} else {
-				L.DomUtil.addClass(button, 'leaflet-disabled');
+				L.DomUtil.addClass(button, "leaflet-disabled");
 			}
 
 			button.setAttribute(
-				'title',
-				hasLayers ?
-					L.drawLocal.edit.toolbar.buttons.edit
+				"title",
+				hasLayers
+					? L.drawLocal.edit.toolbar.buttons.edit
 					: L.drawLocal.edit.toolbar.buttons.editDisabled
 			);
 		}
@@ -6883,19 +6897,19 @@ L.EditToolbar = L.Toolbar.extend({
 			button = this._modes[L.EditToolbar.Delete.TYPE].button;
 
 			if (hasLayers) {
-				L.DomUtil.removeClass(button, 'leaflet-disabled');
+				L.DomUtil.removeClass(button, "leaflet-disabled");
 			} else {
-				L.DomUtil.addClass(button, 'leaflet-disabled');
+				L.DomUtil.addClass(button, "leaflet-disabled");
 			}
 
 			button.setAttribute(
-				'title',
-				hasLayers ?
-					L.drawLocal.edit.toolbar.buttons.remove
+				"title",
+				hasLayers
+					? L.drawLocal.edit.toolbar.buttons.remove
 					: L.drawLocal.edit.toolbar.buttons.removeDisabled
 			);
 		}
-	}
+	},
 });
 
 
