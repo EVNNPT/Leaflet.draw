@@ -3,9 +3,8 @@
  * @aka Toolbar
  */
 L.DrawToolbar = L.Toolbar.extend({
-
 	statics: {
-		TYPE: 'draw'
+		TYPE: "draw",
 	},
 
 	options: {
@@ -14,7 +13,11 @@ L.DrawToolbar = L.Toolbar.extend({
 		rectangle: {},
 		circle: {},
 		marker: {},
-		circlemarker: {}
+		circlemarker: {},
+		role: {},
+		thanhCai: {},
+		mayBienAp: {},
+		duongDay: {},
 	},
 
 	// @method initialize(): void
@@ -28,7 +31,7 @@ L.DrawToolbar = L.Toolbar.extend({
 			}
 		}
 
-		this._toolbarClass = 'leaflet-draw-draw';
+		this._toolbarClass = "leaflet-draw-draw";
 		L.Toolbar.prototype.initialize.call(this, options);
 	},
 
@@ -39,33 +42,53 @@ L.DrawToolbar = L.Toolbar.extend({
 			{
 				enabled: this.options.polyline,
 				handler: new L.Draw.Polyline(map, this.options.polyline),
-				title: L.drawLocal.draw.toolbar.buttons.polyline
+				title: L.drawLocal.draw.toolbar.buttons.polyline,
 			},
 			{
 				enabled: this.options.polygon,
 				handler: new L.Draw.Polygon(map, this.options.polygon),
-				title: L.drawLocal.draw.toolbar.buttons.polygon
+				title: L.drawLocal.draw.toolbar.buttons.polygon,
 			},
 			{
 				enabled: this.options.rectangle,
 				handler: new L.Draw.Rectangle(map, this.options.rectangle),
-				title: L.drawLocal.draw.toolbar.buttons.rectangle
+				title: L.drawLocal.draw.toolbar.buttons.rectangle,
 			},
 			{
 				enabled: this.options.circle,
 				handler: new L.Draw.Circle(map, this.options.circle),
-				title: L.drawLocal.draw.toolbar.buttons.circle
+				title: L.drawLocal.draw.toolbar.buttons.circle,
 			},
 			{
 				enabled: this.options.marker,
 				handler: new L.Draw.Marker(map, this.options.marker),
-				title: L.drawLocal.draw.toolbar.buttons.marker
+				title: L.drawLocal.draw.toolbar.buttons.marker,
 			},
 			{
 				enabled: this.options.circlemarker,
 				handler: new L.Draw.CircleMarker(map, this.options.circlemarker),
-				title: L.drawLocal.draw.toolbar.buttons.circlemarker
-			}
+				title: L.drawLocal.draw.toolbar.buttons.circlemarker,
+			},
+			{
+				enabled: this.options.role,
+				handler: new L.Draw.Role(map, this.options.role),
+				title: L.drawLocal.draw.toolbar.buttons.role,
+			},
+			{
+				enabled: this.options.thanhCai,
+				handler: new L.Draw.ThanhCai(map, this.options.thanhCai),
+				title: L.drawLocal.draw.toolbar.buttons.thanhCai,
+			},
+			{
+				enabled: this.options.mayBienAp,
+				handler: new L.Draw.MayBienAp(map, this.options.mayBienAp),
+				title: L.drawLocal.draw.toolbar.buttons.mayBienAp,
+			},
+			{
+				enabled: this.options.duongDay,
+				handler: new L.Draw.DuongDay(map, this.options.duongDay),
+				title: L.drawLocal.draw.toolbar.buttons.duongDay,
+			},
 		];
 	},
 
@@ -78,21 +101,21 @@ L.DrawToolbar = L.Toolbar.extend({
 				title: L.drawLocal.draw.toolbar.finish.title,
 				text: L.drawLocal.draw.toolbar.finish.text,
 				callback: handler.completeShape,
-				context: handler
+				context: handler,
 			},
 			{
 				enabled: handler.deleteLastVertex,
 				title: L.drawLocal.draw.toolbar.undo.title,
 				text: L.drawLocal.draw.toolbar.undo.text,
 				callback: handler.deleteLastVertex,
-				context: handler
+				context: handler,
 			},
 			{
 				title: L.drawLocal.draw.toolbar.actions.title,
 				text: L.drawLocal.draw.toolbar.actions.text,
 				callback: this.disable,
-				context: this
-			}
+				context: this,
+			},
 		];
 	},
 
@@ -106,5 +129,5 @@ L.DrawToolbar = L.Toolbar.extend({
 				this._modes[type].handler.setOptions(options[type]);
 			}
 		}
-	}
+	},
 });
