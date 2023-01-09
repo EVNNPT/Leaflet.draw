@@ -4,7 +4,7 @@
  */
 L.EditToolbar.Edit = L.Handler.extend({
 	statics: {
-		TYPE: 'edit'
+		TYPE: "edit",
 	},
 
 	// @method intialize(): void
@@ -17,7 +17,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 		this._featureGroup = options.featureGroup;
 
 		if (!(this._featureGroup instanceof L.FeatureGroup)) {
-			throw new Error('options.featureGroup must be a L.FeatureGroup');
+			throw new Error("options.featureGroup must be a L.FeatureGroup");
 		}
 
 		this._uneditedLayerProps = {};
@@ -25,7 +25,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
 		this.type = L.EditToolbar.Edit.TYPE;
 
-		var version = L.version.split('.');
+		var version = L.version.split(".");
 		//If Version is >= 1.2.0
 		if (parseInt(version[0], 10) === 1 && parseInt(version[1], 10) >= 2) {
 			L.EditToolbar.Edit.include(L.Evented.prototype);
@@ -40,16 +40,16 @@ L.EditToolbar.Edit = L.Handler.extend({
 		if (this._enabled || !this._hasAvailableLayers()) {
 			return;
 		}
-		this.fire('enabled', {handler: this.type});
+		this.fire("enabled", { handler: this.type });
 		//this disable other handlers
 
-		this._map.fire(L.Draw.Event.EDITSTART, {handler: this.type});
+		this._map.fire(L.Draw.Event.EDITSTART, { handler: this.type });
 		//allow drawLayer to be updated before beginning edition.
 
 		L.Handler.prototype.enable.call(this);
 		this._featureGroup
-			.on('layeradd', this._enableLayerEdit, this)
-			.on('layerremove', this._disableLayerEdit, this);
+			.on("layeradd", this._enableLayerEdit, this)
+			.on("layerremove", this._disableLayerEdit, this);
 	},
 
 	// @method disable(): void
@@ -59,11 +59,11 @@ L.EditToolbar.Edit = L.Handler.extend({
 			return;
 		}
 		this._featureGroup
-			.off('layeradd', this._enableLayerEdit, this)
-			.off('layerremove', this._disableLayerEdit, this);
+			.off("layeradd", this._enableLayerEdit, this)
+			.off("layerremove", this._disableLayerEdit, this);
 		L.Handler.prototype.disable.call(this);
-		this._map.fire(L.Draw.Event.EDITSTOP, {handler: this.type});
-		this.fire('disabled', {handler: this.type});
+		this._map.fire(L.Draw.Event.EDITSTOP, { handler: this.type });
+		this.fire("disabled", { handler: this.type });
 	},
 
 	// @method addHooks(): void
@@ -79,7 +79,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 			this._tooltip = new L.Draw.Tooltip(this._map);
 			this._tooltip.updateContent({
 				text: L.drawLocal.edit.handlers.edit.tooltip.text,
-				subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext
+				subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext,
 			});
 
 			// Quickly access the tooltip to update for intersection checking
@@ -88,9 +88,9 @@ L.EditToolbar.Edit = L.Handler.extend({
 			this._updateTooltip();
 
 			this._map
-				.on('mousemove', this._onMouseMove, this)
-				.on('touchmove', this._onMouseMove, this)
-				.on('MSPointerMove', this._onMouseMove, this)
+				.on("mousemove", this._onMouseMove, this)
+				.on("touchmove", this._onMouseMove, this)
+				.on("MSPointerMove", this._onMouseMove, this)
 				.on(L.Draw.Event.EDITVERTEX, this._updateTooltip, this);
 		}
 	},
@@ -109,9 +109,9 @@ L.EditToolbar.Edit = L.Handler.extend({
 			this._tooltip = null;
 
 			this._map
-				.off('mousemove', this._onMouseMove, this)
-				.off('touchmove', this._onMouseMove, this)
-				.off('MSPointerMove', this._onMouseMove, this)
+				.off("mousemove", this._onMouseMove, this)
+				.off("touchmove", this._onMouseMove, this)
+				.off("MSPointerMove", this._onMouseMove, this)
 				.off(L.Draw.Event.EDITVERTEX, this._updateTooltip, this);
 		}
 	},
@@ -133,8 +133,11 @@ L.EditToolbar.Edit = L.Handler.extend({
 				editedLayers.addLayer(layer);
 				layer.edited = false;
 			}
+			if (layer.optionsClone) {
+				layer.cloneOptions();
+			}
 		});
-		this._map.fire(L.Draw.Event.EDITED, {layers: editedLayers});
+		this._map.fire(L.Draw.Event.EDITED, { layers: editedLayers });
 	},
 
 	_backupLayer: function (layer) {
@@ -142,28 +145,33 @@ L.EditToolbar.Edit = L.Handler.extend({
 
 		if (!this._uneditedLayerProps[id]) {
 			// Polyline, Polygon or Rectangle
-			if (layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+			if (
+				layer instanceof L.Polyline ||
+				layer instanceof L.Polygon ||
+				layer instanceof L.Rectangle
+			) {
 				this._uneditedLayerProps[id] = {
-					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs())
+					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs()),
 				};
 			} else if (layer instanceof L.Circle) {
 				this._uneditedLayerProps[id] = {
 					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng()),
-					radius: layer.getRadius()
+					radius: layer.getRadius(),
 				};
-			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) { // Marker
+			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+				// Marker
 				this._uneditedLayerProps[id] = {
-					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng())
+					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng()),
 				};
 			}
 		}
 	},
 
 	_getTooltipText: function () {
-		return ({
+		return {
 			text: L.drawLocal.edit.handlers.edit.tooltip.text,
-			subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext
-		});
+			subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext,
+		};
 	},
 
 	_updateTooltip: function () {
@@ -175,22 +183,31 @@ L.EditToolbar.Edit = L.Handler.extend({
 		layer.edited = false;
 		if (this._uneditedLayerProps.hasOwnProperty(id)) {
 			// Polyline, Polygon or Rectangle
-			if (layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+			if (
+				layer instanceof L.Polyline ||
+				layer instanceof L.Polygon ||
+				layer instanceof L.Rectangle
+			) {
 				layer.setLatLngs(this._uneditedLayerProps[id].latlngs);
 			} else if (layer instanceof L.Circle) {
 				layer.setLatLng(this._uneditedLayerProps[id].latlng);
 				layer.setRadius(this._uneditedLayerProps[id].radius);
-			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) { // Marker or CircleMarker
+			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+				// Marker or CircleMarker
 				layer.setLatLng(this._uneditedLayerProps[id].latlng);
 			}
-
-			layer.fire('revert-edited', {layer: layer});
+			// Revert Options
+			if (layer.optionsClone) {
+				L.setOptions(layer, layer.optionsClone);
+			}
+			layer.fire("revert-edited", { layer: layer });
 		}
 	},
 
 	_enableLayerEdit: function (e) {
 		var layer = e.layer || e.target || e,
-			pathOptions, poly;
+			pathOptions,
+			poly;
 
 		// Back up this layer (if haven't before)
 		this._backupLayer(layer);
@@ -212,7 +229,6 @@ L.EditToolbar.Edit = L.Handler.extend({
 
 			layer.options.original = L.extend({}, layer.options);
 			layer.options.editing = pathOptions;
-
 		}
 
 		if (layer instanceof L.Marker) {
@@ -221,12 +237,12 @@ L.EditToolbar.Edit = L.Handler.extend({
 			}
 			layer.dragging.enable();
 			layer
-				.on('dragend', this._onMarkerDragEnd)
+				.on("dragend", this._onMarkerDragEnd)
 				// #TODO: remove when leaflet finally fixes their draggable so it's touch friendly again.
-				.on('touchmove', this._onTouchMove, this)
-				.on('MSPointerMove', this._onTouchMove, this)
-				.on('touchend', this._onMarkerDragEnd, this)
-				.on('MSPointerUp', this._onMarkerDragEnd, this);
+				.on("touchmove", this._onTouchMove, this)
+				.on("MSPointerMove", this._onTouchMove, this)
+				.on("touchend", this._onMarkerDragEnd, this)
+				.on("MSPointerUp", this._onMarkerDragEnd, this);
 		} else {
 			layer.editing.enable();
 		}
@@ -257,11 +273,11 @@ L.EditToolbar.Edit = L.Handler.extend({
 		if (layer instanceof L.Marker) {
 			layer.dragging.disable();
 			layer
-				.off('dragend', this._onMarkerDragEnd, this)
-				.off('touchmove', this._onTouchMove, this)
-				.off('MSPointerMove', this._onTouchMove, this)
-				.off('touchend', this._onMarkerDragEnd, this)
-				.off('MSPointerUp', this._onMarkerDragEnd, this);
+				.off("dragend", this._onMarkerDragEnd, this)
+				.off("touchmove", this._onTouchMove, this)
+				.off("MSPointerMove", this._onTouchMove, this)
+				.off("touchend", this._onMarkerDragEnd, this)
+				.off("MSPointerUp", this._onMarkerDragEnd, this);
 		} else {
 			layer.editing.disable();
 		}
@@ -274,7 +290,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 	_onMarkerDragEnd: function (e) {
 		var layer = e.target;
 		layer.edited = true;
-		this._map.fire(L.Draw.Event.EDITMOVE, {layer: layer});
+		this._map.fire(L.Draw.Event.EDITMOVE, { layer: layer });
 	},
 
 	_onTouchMove: function (e) {
@@ -286,5 +302,5 @@ L.EditToolbar.Edit = L.Handler.extend({
 
 	_hasAvailableLayers: function () {
 		return this._featureGroup.getLayers().length !== 0;
-	}
+	},
 });

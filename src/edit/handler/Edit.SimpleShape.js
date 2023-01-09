@@ -7,19 +7,21 @@ L.Edit.SimpleShape = L.Handler.extend({
 	options: {
 		moveIcon: new L.DivIcon({
 			iconSize: new L.Point(8, 8),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-move'
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-edit-move",
 		}),
 		resizeIcon: new L.DivIcon({
 			iconSize: new L.Point(8, 8),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-resize'
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-edit-resize",
 		}),
 		touchMoveIcon: new L.DivIcon({
 			iconSize: new L.Point(20, 20),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-move leaflet-touch-icon'
+			className:
+				"leaflet-div-icon leaflet-editing-icon leaflet-edit-move leaflet-touch-icon",
 		}),
 		touchResizeIcon: new L.DivIcon({
 			iconSize: new L.Point(20, 20),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-resize leaflet-touch-icon'
+			className:
+				"leaflet-div-icon leaflet-editing-icon leaflet-edit-resize leaflet-touch-icon",
 		}),
 	},
 
@@ -62,6 +64,7 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 		if (shape._map) {
 			this._unbindMarker(this._moveMarker);
+			this._unbindMarker(this._rotateMarker);
 
 			for (var i = 0, l = this._resizeMarkers.length; i < l; i++) {
 				this._unbindMarker(this._resizeMarkers[i]);
@@ -92,6 +95,9 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 		// Create edge marker
 		this._createResizeMarker();
+
+		// Create rotate marker
+		this._createRotateMarker();
 	},
 
 	_createMoveMarker: function () {
@@ -102,12 +108,16 @@ L.Edit.SimpleShape = L.Handler.extend({
 		// Children override
 	},
 
+	_createRotateMarker: function () {
+		// Children override
+	},
+
 	_createMarker: function (latlng, icon) {
 		// Extending L.Marker in TouchEvents.js to include touch.
 		var marker = new L.Marker.Touch(latlng, {
 			draggable: true,
 			icon: icon,
-			zIndexOffset: 10
+			zIndexOffset: 10,
 		});
 
 		this._bindMarker(marker);
@@ -119,38 +129,39 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 	_bindMarker: function (marker) {
 		marker
-			.on('dragstart', this._onMarkerDragStart, this)
-			.on('drag', this._onMarkerDrag, this)
-			.on('dragend', this._onMarkerDragEnd, this)
-			.on('touchstart', this._onTouchStart, this)
-			.on('touchmove', this._onTouchMove, this)
-			.on('MSPointerMove', this._onTouchMove, this)
-			.on('touchend', this._onTouchEnd, this)
-			.on('MSPointerUp', this._onTouchEnd, this);
+			.on("dragstart", this._onMarkerDragStart, this)
+			.on("drag", this._onMarkerDrag, this)
+			.on("dragend", this._onMarkerDragEnd, this)
+			.on("touchstart", this._onTouchStart, this)
+			.on("touchmove", this._onTouchMove, this)
+			.on("MSPointerMove", this._onTouchMove, this)
+			.on("touchend", this._onTouchEnd, this)
+			.on("MSPointerUp", this._onTouchEnd, this);
 	},
 
 	_unbindMarker: function (marker) {
+		if (marker === undefined) return;
 		marker
-			.off('dragstart', this._onMarkerDragStart, this)
-			.off('drag', this._onMarkerDrag, this)
-			.off('dragend', this._onMarkerDragEnd, this)
-			.off('touchstart', this._onTouchStart, this)
-			.off('touchmove', this._onTouchMove, this)
-			.off('MSPointerMove', this._onTouchMove, this)
-			.off('touchend', this._onTouchEnd, this)
-			.off('MSPointerUp', this._onTouchEnd, this);
+			.off("dragstart", this._onMarkerDragStart, this)
+			.off("drag", this._onMarkerDrag, this)
+			.off("dragend", this._onMarkerDragEnd, this)
+			.off("touchstart", this._onTouchStart, this)
+			.off("touchmove", this._onTouchMove, this)
+			.off("MSPointerMove", this._onTouchMove, this)
+			.off("touchend", this._onTouchEnd, this)
+			.off("MSPointerUp", this._onTouchEnd, this);
 	},
 
 	_onMarkerDragStart: function (e) {
 		var marker = e.target;
 		marker.setOpacity(0);
 
-		this._shape.fire('editstart');
+		this._shape.fire("editstart");
 	},
 
 	_fireEdit: function () {
 		this._shape.edited = true;
-		this._shape.fire('edit');
+		this._shape.fire("edit");
 	},
 
 	_onMarkerDrag: function (e) {
@@ -159,12 +170,14 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 		if (marker === this._moveMarker) {
 			this._move(latlng);
+		} else if (marker === this._rotateMarker) {
+			this._rotate(latlng);
 		} else {
 			this._resize(latlng);
 		}
 
 		this._shape.redraw();
-		this._shape.fire('editdrag');
+		this._shape.fire("editdrag");
 	},
 
 	_onMarkerDragEnd: function (e) {
@@ -177,7 +190,7 @@ L.Edit.SimpleShape = L.Handler.extend({
 	_onTouchStart: function (e) {
 		L.Edit.SimpleShape.prototype._onMarkerDragStart.call(this, e);
 
-		if (typeof(this._getCorners) === 'function') {
+		if (typeof this._getCorners === "function") {
 			// Save a reference to the opposite point
 			var corners = this._getCorners(),
 				marker = e.target,
@@ -191,16 +204,20 @@ L.Edit.SimpleShape = L.Handler.extend({
 			this._toggleCornerMarkers(0, currentCornerIndex);
 		}
 
-		this._shape.fire('editstart');
+		this._shape.fire("editstart");
 	},
 
 	_onTouchMove: function (e) {
-		var layerPoint = this._map.mouseEventToLayerPoint(e.originalEvent.touches[0]),
+		var layerPoint = this._map.mouseEventToLayerPoint(
+				e.originalEvent.touches[0]
+			),
 			latlng = this._map.layerPointToLatLng(layerPoint),
 			marker = e.target;
 
 		if (marker === this._moveMarker) {
 			this._move(latlng);
+		} else if (marker === this._rotateMarker) {
+			this._rotate(latlng);
 		} else {
 			this._resize(latlng);
 		}
@@ -225,5 +242,9 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 	_resize: function () {
 		// Children override
-	}
+	},
+
+	_rotate: function () {
+		// Children override
+	},
 });

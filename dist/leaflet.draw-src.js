@@ -1,11 +1,531 @@
 /*
- Leaflet.draw 1.0.4+438bd58, a plugin that adds drawing and editing tools to Leaflet powered maps.
+ Leaflet.draw 1.0.4+76aab99, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
 
  https://github.com/Leaflet/Leaflet.draw
  http://leafletjs.com
  */
-(function (window, document, undefined) {/**
+(function (window, document, undefined) {L.Renderer.include({
+	_updateMayBienAp: function (layer) {
+		const o1 = layer._xuLy(layer._getLatLngI1(), layer._getRadiusR1());
+		const i1 = o1[0];
+		const r1x = Math.max(Math.round(o1[1]), 1);
+		const r1y = Math.max(Math.round(o1[2]), 1) || r1x;
+
+		const o2 = layer._xuLy(layer._getLatLngI2(), layer._getRadiusR2());
+		const i2 = o2[0];
+		const r2x = Math.max(Math.round(o2[1]), 1);
+		const r2y = Math.max(Math.round(o2[2]), 1) || r2x;
+
+		const arc1 = "a" + r1x + "," + r1y + " 0 1,0 ";
+
+		const arc2 = "a" + r2x + "," + r2y + " 0 1,0 ";
+
+		const pA = layer._xuLy(layer._getLatLngA(), layer._getRadiusR1())[0];
+		const pN = layer._xuLy(layer._getLatLngN(), layer._getRadiusR1())[0];
+		const pB = layer._xuLy(layer._getLatLngB(), layer._getRadiusR1())[0];
+
+		const arc3 =
+			"M" +
+			pA.x +
+			" " +
+			pA.y +
+			" Q " +
+			pN.x +
+			" " +
+			pN.y +
+			" " +
+			pB.x +
+			" " +
+			pB.y;
+
+		var d = layer._empty()
+			? "M0 0"
+			: "M" +
+			  (i1.x - r1x) +
+			  "," +
+			  i1.y +
+			  arc1 +
+			  r1x * 2 +
+			  ",0 " +
+			  arc1 +
+			  -r1y * 2 +
+			  ",0 " +
+			  "M" +
+			  (i2.x - r2x) +
+			  "," +
+			  i2.y +
+			  arc2 +
+			  r2x * 2 +
+			  ",0 " +
+			  arc2 +
+			  -r2y * 2 +
+			  ",0 " +
+			  arc3;
+
+		this._setPath(layer, d);
+	},
+});
+
+//#region L.MayBienAp
+L.MayBienAp = L.Path.extend({
+	options: {
+		fill: false,
+		chieuDai: 150,
+		gocXoay: 0,
+	},
+
+	initialize: function (latlng, options) {
+		L.setOptions(this, options);
+		this.cloneOptions();
+		this._latlng = L.latLng(latlng);
+	},
+
+	// @method setLatLng(latLng: LatLng): this
+	// Sets the position of a circle marker to a new location.
+	setLatLng: function (latlng) {
+		this._latlng = L.latLng(latlng);
+		this.redraw();
+		return this.fire("move", { latlng: this._latlng });
+	},
+
+	// @method getLatLng(): LatLng
+	// Returns the current geographical position of the circle marker
+	getLatLng: function () {
+		return this._latlng;
+	},
+
+	_getRadiusR1: function () {
+		return (
+			(this.options.chieuDai * 4) / (2 + 3 * Math.sin(Math.acos(1 / 3)) * 4)
+		);
+	},
+
+	_getLatLngI1: function () {
+		return L.GeometryUtil.destination(
+			this._latlng,
+			this.options.gocXoay - 90,
+			this._getRadiusR1() / 4
+		);
+	},
+
+	_getRadiusR2: function () {
+		return 0.6 * this._getRadiusR1();
+	},
+
+	_getLatLngI2: function () {
+		return L.GeometryUtil.destination(
+			this._getLatLngC(),
+			this.options.gocXoay - 90,
+			this._getRadiusR2()
+		);
+	},
+
+	_getLatLngA: function () {
+		return L.GeometryUtil.destination(
+			this._latlng,
+			this.options.gocXoay - 90,
+			this.options.chieuDai / 2
+		);
+	},
+
+	_getLatLngB: function () {
+		return L.GeometryUtil.destination(
+			this._getLatLngI1(),
+			this.options.gocXoay,
+			this._getRadiusR1()
+		);
+	},
+
+	_getLatLngC: function () {
+		return L.GeometryUtil.destination(
+			this._latlng,
+			this.options.gocXoay + 90,
+			this.options.chieuDai / 2
+		);
+	},
+
+	_getLatLngD: function () {
+		return L.GeometryUtil.destination(
+			this._getLatLngI1(),
+			this.options.gocXoay + 180,
+			this._getRadiusR1()
+		);
+	},
+
+	_getLatLngE: function () {
+		return L.GeometryUtil.destination(
+			this._getLatLngI2(),
+			this.options.gocXoay,
+			this._getRadiusR2()
+		);
+	},
+
+	_getLatLngF: function () {
+		return L.GeometryUtil.destination(
+			this._getLatLngI2(),
+			this.options.gocXoay + 180,
+			this._getRadiusR2()
+		);
+	},
+
+	_getLatLngM: function () {
+		const angleAB = L.GeometryUtil.angle(
+			this._map,
+			this._getLatLngA(),
+			this._getLatLngB()
+		);
+		const d = this._getLatLngA().distanceTo(this._getLatLngB());
+		return L.GeometryUtil.destination(this._getLatLngA(), angleAB, d / 2);
+	},
+
+	_getLatLngN: function () {
+		const pM = this._getLatLngM();
+		const pI1 = this._getLatLngI1();
+		const angleMB = L.GeometryUtil.angle(this._map, pM, this._getLatLngB());
+		const angleMI1 = L.GeometryUtil.angle(this._map, pM, pI1);
+		const angleMBMI1 = angleMI1 - angleMB;
+		const d = pM.distanceTo(pI1);
+		const dI1AB = Math.sin((angleMBMI1 * Math.PI) / 180) * d;
+		return L.GeometryUtil.destination(
+			this._getLatLngM(),
+			angleMB - 90,
+			(3 * dI1AB) / 4
+		);
+	},
+
+	getRotateMarker: function () {
+		return L.GeometryUtil.destination(
+			this._latlng,
+			this.options.gocXoay,
+			(3 * this._getRadiusR1()) / 2
+		);
+	},
+
+	_xuLy: function (latlng, radius) {
+		var lng = latlng.lng,
+			lat = latlng.lat,
+			map = this._map,
+			crs = map.options.crs,
+			retP,
+			retRadiusX,
+			retRadiusY;
+
+		if (crs.distance === L.CRS.Earth.distance) {
+			var d = Math.PI / 180,
+				latR = radius / L.CRS.Earth.R / d,
+				top = map.project([lat + latR, lng]),
+				bottom = map.project([lat - latR, lng]),
+				p = top.add(bottom).divideBy(2),
+				lat2 = map.unproject(p).lat,
+				lngR =
+					Math.acos(
+						(Math.cos(latR * d) - Math.sin(lat * d) * Math.sin(lat2 * d)) /
+							(Math.cos(lat * d) * Math.cos(lat2 * d))
+					) / d;
+
+			if (isNaN(lngR) || lngR === 0) {
+				lngR = latR / Math.cos((Math.PI / 180) * lat); // Fallback for edge case, #2425
+			}
+
+			retP = p.subtract(map.getPixelOrigin());
+			retRadiusX = isNaN(lngR) ? 0 : p.x - map.project([lat2, lng - lngR]).x;
+			retRadiusY = p.y - top.y;
+		} else {
+			var latlng2 = crs.unproject(crs.project(latlng).subtract([radius, 0]));
+
+			retP = map.latLngToLayerPoint(latlng);
+			retRadiusX = retP.x - map.latLngToLayerPoint(latlng2).x;
+			retRadiusY = radius;
+		}
+
+		return [retP, retRadiusX, retRadiusY];
+	},
+
+	_project: function () {
+		this._updateBounds();
+	},
+
+	_updateBounds: function () {
+		const bounds = this.getBounds();
+		this._pxBounds = L.bounds(
+			this._map.latLngToLayerPoint(bounds._northEast),
+			this._map.latLngToLayerPoint(bounds._southWest)
+		);
+	},
+
+	_update: function () {
+		if (this._map) {
+			this._updatePath();
+		}
+	},
+
+	_updatePath: function () {
+		this._renderer._updateMayBienAp(this);
+	},
+
+	_empty: function () {
+		return this._radius && !this._renderer._bounds.intersects(this._pxBounds);
+	},
+
+	// Needed by the `Canvas` renderer for interactivity
+	_containsPoint: function (p) {
+		return p.distanceTo(this._point) <= this._radius + this._clickTolerance();
+	},
+
+	// @method getBounds(): LatLngBounds
+	// Returns the `LatLngBounds` of the path.
+	getBounds: function () {
+		const pA = this._getLatLngA();
+		const pC = this._getLatLngC();
+
+		return L.latLngBounds(
+			L.GeometryUtil.destination(
+				pC,
+				-this.options.gocXoay,
+				this._getRadiusR1()
+			),
+			L.GeometryUtil.destination(
+				pA,
+				this.options.gocXoay + 180,
+				this._getRadiusR1()
+			)
+		);
+	},
+	rotate: function (latlng) {
+		const map = this._map;
+		const centerPoint = this._latlng;
+		const angle = L.GeometryUtil.angle(map, centerPoint, latlng);
+		this.options.gocXoay = angle;
+		this.redraw();
+	},
+	resize: function (latlng) {
+		const map = this._map;
+		const pC = this._getLatLngC();
+		const centerPoint = this._latlng;
+		const angleMC = L.GeometryUtil.angle(map, centerPoint, pC);
+		const angleMCDetal = L.GeometryUtil.angle(map, centerPoint, latlng);
+		const angle = Math.abs(angleMCDetal - angleMC);
+		const d =
+			Math.cos((angle * Math.PI) / 180) * centerPoint.distanceTo(latlng);
+		this.options.chieuDai = Math.abs(2 * d);
+		this.redraw();
+	},
+	move: function (latlng) {
+		this._latlng = latlng;
+		this.redraw();
+	},
+	cloneOptions: function () {
+		this.optionsClone = {
+			gocXoay: this.options.gocXoay,
+			chieuDai: this.options.chieuDai,
+		};
+	},
+});
+
+L.mayBienAp = function (latlng, options) {
+	return new L.MayBienAp(latlng, options);
+};
+//#endregion
+
+// Thêm hàm/thuộc tính vào lớp Layer đã tồn tại.
+L.Layer.include({
+	// Hàm trả về centerPoint của layer
+	getCenterCus: function () {
+		const pNE = this._map.project(this._bounds._northEast, this._map.getZoom());
+		const pSW = this._map.project(this._bounds._southWest, this._map.getZoom());
+		return this._map.unproject(
+			L.point((pNE.x + pSW.x) / 2, (pNE.y + pSW.y) / 2),
+			this._map.getZoom()
+		);
+	},
+});
+
+//#region L.ThanhCai
+L.ThanhCai = L.Polyline.extend({
+	options: {
+		chieuDai: 300,
+		gocXoay: 0,
+		distanceRotateMarker: 20,
+	},
+	initialize: function (centerPoint, options) {
+		L.setOptions(this, options);
+		this.cloneOptions();
+		const latlngs = this._thanhCaiLatLngs(centerPoint);
+		L.Polyline.prototype.initialize.call(this, latlngs, options);
+	},
+	_thanhCaiLatLngs: function (centerPoint) {
+		const gocXoayA = this.options.gocXoay;
+		const gocXoayB = gocXoayA + 180;
+		const diemA = L.GeometryUtil.destination(
+			centerPoint,
+			gocXoayA,
+			this.options.chieuDai / 2
+		);
+		const diemB = L.GeometryUtil.destination(
+			centerPoint,
+			gocXoayB,
+			this.options.chieuDai / 2
+		);
+		return [diemA, diemB];
+	},
+	getRotateMarker: function () {
+		const centerPoint = this.getCenterCus();
+		return L.GeometryUtil.destination(
+			centerPoint,
+			this.options.gocXoay - 90,
+			this.options.distanceRotateMarker
+		);
+	},
+	rotate: function (latlng) {
+		const map = this._map;
+		const centerPoint = this.getCenterCus();
+		const angle = L.GeometryUtil.angle(map, centerPoint, latlng);
+		this.options.gocXoay = angle + 90;
+		this.setLatLngs(this._thanhCaiLatLngs(centerPoint));
+	},
+	resize: function (latlng) {
+		const map = this._map;
+		const latLngs = this.getLatLngs();
+		const centerPoint = this.getCenterCus();
+		const pA = latLngs[0];
+		const angleMA = L.GeometryUtil.angle(map, centerPoint, pA);
+		const angleMADetal = L.GeometryUtil.angle(map, centerPoint, latlng);
+		const angle = Math.abs(angleMADetal - angleMA);
+		const d =
+			Math.cos((angle * Math.PI) / 180) * centerPoint.distanceTo(latlng);
+		this.options.chieuDai = Math.abs(2 * d);
+		this.setLatLngs(this._thanhCaiLatLngs(centerPoint));
+	},
+	move: function (latlng) {
+		this.setLatLngs(this._thanhCaiLatLngs(latlng));
+	},
+	cloneOptions: function () {
+		this.optionsClone = {
+			gocXoay: this.options.gocXoay,
+			chieuDai: this.options.chieuDai,
+		};
+	},
+});
+
+L.thanhCai = function (latlng, map, options) {
+	return new L.ThanhCai(latlng, map, options);
+};
+//#endregion
+
+//#region L.Role
+L.Role = L.Polyline.extend({
+	options: {
+		chieuDai: 50,
+		chieuRong: 25,
+		gocXoay: 0,
+	},
+	initialize: function (centerPoint, options) {
+		L.setOptions(this, options);
+		this.cloneOptions();
+		const latlngs = this._roleLatLngs(centerPoint);
+		L.Polyline.prototype.initialize.call(this, latlngs, options);
+	},
+	_roleLatLngs: function (centerPoint) {
+		const gocXoayM = -this.options.gocXoay;
+		const gocXoayA = -90 - this.options.gocXoay;
+		const gocXoayB = gocXoayA + 180;
+		const gocXoayC = 180 + gocXoayM;
+		const gocXoayD = 180 + gocXoayM;
+		const trungDiemAB = L.GeometryUtil.destination(
+			centerPoint,
+			-gocXoayM,
+			this.options.chieuRong / 2
+		);
+		const diemA = L.GeometryUtil.destination(
+			trungDiemAB,
+			-gocXoayA,
+			this.options.chieuDai / 2
+		);
+		const diemB = L.GeometryUtil.destination(
+			trungDiemAB,
+			-gocXoayB,
+			this.options.chieuDai / 2
+		);
+		const diemC = L.GeometryUtil.destination(
+			diemB,
+			-gocXoayC,
+			this.options.chieuRong
+		);
+		const diemD = L.GeometryUtil.destination(
+			diemA,
+			-gocXoayD,
+			this.options.chieuRong
+		);
+		return [diemA, diemB, diemC, diemD, diemA];
+	},
+	getRotateMarker: function () {
+		const centerPoint = this.getCenterCus();
+		return L.GeometryUtil.destination(
+			centerPoint,
+			this.options.gocXoay,
+			this.options.chieuRong
+		);
+	},
+	move: function (latlng) {
+		this.setLatLngs(this._roleLatLngs(latlng));
+	},
+	resize: function (latlng) {
+		const latLngs = this.getLatLngs();
+		const centerPoint = this.getCenterCus();
+		const map = this._map;
+		const pA = latLngs[0];
+		const pB = latLngs[1];
+		const pD = latLngs[3];
+		const trungDiemAB = L.GeometryUtil.closestOnSegment(
+			map,
+			centerPoint,
+			pA,
+			pB
+		);
+		const trungDiemAD = L.GeometryUtil.closestOnSegment(
+			map,
+			centerPoint,
+			pA,
+			pD
+		);
+		const angleMAB_A = L.GeometryUtil.angle(map, trungDiemAB, pA);
+		const angleMAD_A = L.GeometryUtil.angle(map, trungDiemAD, pA);
+		const angleMAB_ADetal = L.GeometryUtil.angle(map, trungDiemAB, latlng);
+		const angleMAD_ADetal = L.GeometryUtil.angle(map, trungDiemAD, latlng);
+		const angleA = Math.abs(angleMAB_ADetal - angleMAB_A);
+		const angleB = Math.abs(angleMAD_ADetal - angleMAD_A);
+		const dxAB =
+			Math.cos((angleA * Math.PI) / 180) * trungDiemAB.distanceTo(latlng);
+		const dxAD =
+			Math.cos((angleB * Math.PI) / 180) * trungDiemAD.distanceTo(latlng);
+		this.options.chieuDai = Math.abs(this.options.chieuDai / 2 + dxAB);
+		this.options.chieuRong = Math.abs(this.options.chieuRong / 2 + dxAD);
+		this.setLatLngs(this._roleLatLngs(centerPoint));
+	},
+	rotate: function (latlng) {
+		const map = this._map;
+		const centerPoint = this.getCenterCus();
+		const angle = L.GeometryUtil.angle(map, centerPoint, latlng);
+		this.options.gocXoay = angle;
+		this.setLatLngs(this._roleLatLngs(centerPoint));
+	},
+	cloneOptions: function () {
+		this.optionsClone = {
+			chieuDai: this.options.chieuDai,
+			chieuRong: this.options.chieuRong,
+			gocXoay: this.options.gocXoay,
+		};
+	},
+});
+
+L.role = function (latlng, options) {
+	return new L.Role(latlng, options);
+};
+
+
+
+/**
  * Leaflet.draw assumes that you have already included the Leaflet library.
  */
 L.drawVersion = "0.4.2";
@@ -2881,7 +3401,6 @@ L.Edit = L.Edit || {};
 L.Edit.Poly = L.Handler.extend({
 	// @method initialize(): void
 	initialize: function (poly) {
-
 		this.latlngs = [poly._latlngs];
 		if (poly._holes) {
 			this.latlngs = this.latlngs.concat(poly._holes);
@@ -2889,7 +3408,7 @@ L.Edit.Poly = L.Handler.extend({
 
 		this._poly = poly;
 
-		this._poly.on('revert-edited', this._updateLatLngs, this);
+		this._poly.on("revert-edited", this._updateLatLngs, this);
 	},
 
 	// Compatibility method to normalize Poly* objects
@@ -2898,7 +3417,9 @@ L.Edit.Poly = L.Handler.extend({
 		if (!L.Polyline._flat) {
 			return this._poly._latlngs;
 		}
-		return L.Polyline._flat(this._poly._latlngs) ? this._poly._latlngs : this._poly._latlngs[0];
+		return L.Polyline._flat(this._poly._latlngs)
+			? this._poly._latlngs
+			: this._poly._latlngs[0];
 	},
 
 	_eachVertexHandler: function (callback) {
@@ -2935,7 +3456,13 @@ L.Edit.Poly = L.Handler.extend({
 	_initHandlers: function () {
 		this._verticesHandlers = [];
 		for (var i = 0; i < this.latlngs.length; i++) {
-			this._verticesHandlers.push(new L.Edit.PolyVerticesEdit(this._poly, this.latlngs[i], this._poly.options.poly));
+			this._verticesHandlers.push(
+				new L.Edit.PolyVerticesEdit(
+					this._poly,
+					this.latlngs[i],
+					this._poly.options.poly
+				)
+			);
 		}
 	},
 
@@ -2944,8 +3471,7 @@ L.Edit.Poly = L.Handler.extend({
 		if (e.layer._holes) {
 			this.latlngs = this.latlngs.concat(e.layer._holes);
 		}
-	}
-
+	},
 });
 
 /**
@@ -2956,18 +3482,16 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 	options: {
 		icon: new L.DivIcon({
 			iconSize: new L.Point(8, 8),
-			className: 'leaflet-div-icon leaflet-editing-icon'
+			className: "leaflet-div-icon leaflet-editing-icon",
 		}),
 		touchIcon: new L.DivIcon({
 			iconSize: new L.Point(20, 20),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-touch-icon'
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-touch-icon",
 		}),
 		drawError: {
-			color: '#b00b00',
-			timeout: 1000
-		}
-
-
+			color: "#b00b00",
+			timeout: 1000,
+		},
 	},
 
 	// @method intialize(): void
@@ -2979,7 +3503,11 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		this._poly = poly;
 
 		if (options && options.drawError) {
-			options.drawError = L.Util.extend({}, this.options.drawError, options.drawError);
+			options.drawError = L.Util.extend(
+				{},
+				this.options.drawError,
+				options.drawError
+			);
 		}
 
 		this._latlngs = latlngs;
@@ -3012,11 +3540,13 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		if (path) {
 			if (poly.options.editing && poly.options.editing.className) {
 				if (poly.options.original.className) {
-					poly.options.original.className.split(' ').forEach(function (className) {
-						L.DomUtil.removeClass(path, className);
-					});
+					poly.options.original.className
+						.split(" ")
+						.forEach(function (className) {
+							L.DomUtil.removeClass(path, className);
+						});
 				}
-				poly.options.editing.className.split(' ').forEach(function (className) {
+				poly.options.editing.className.split(" ").forEach(function (className) {
 					L.DomUtil.addClass(path, className);
 				});
 			}
@@ -3025,7 +3555,6 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		poly.setStyle(poly.options.editing);
 
 		if (this._poly._map) {
-
 			this._map = this._poly._map; // Set map
 
 			if (!this._markerGroup) {
@@ -3043,13 +3572,15 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 
 		if (path) {
 			if (poly.options.editing && poly.options.editing.className) {
-				poly.options.editing.className.split(' ').forEach(function (className) {
+				poly.options.editing.className.split(" ").forEach(function (className) {
 					L.DomUtil.removeClass(path, className);
 				});
 				if (poly.options.original.className) {
-					poly.options.original.className.split(' ').forEach(function (className) {
-						L.DomUtil.addClass(path, className);
-					});
+					poly.options.original.className
+						.split(" ")
+						.forEach(function (className) {
+							L.DomUtil.addClass(path, className);
+						});
 				}
 			}
 		}
@@ -3077,20 +3608,22 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		this._markers = [];
 
 		var latlngs = this._defaultShape(),
-			i, j, len, marker;
+			i,
+			j,
+			len,
+			marker;
 
 		for (i = 0, len = latlngs.length; i < len; i++) {
-
 			marker = this._createMarker(latlngs[i], i);
-			marker.on('click', this._onMarkerClick, this);
-			marker.on('contextmenu', this._onContextMenu, this);
+			marker.on("click", this._onMarkerClick, this);
+			marker.on("contextmenu", this._onContextMenu, this);
 			this._markers.push(marker);
 		}
 
 		var markerLeft, markerRight;
 
 		for (i = 0, j = len - 1; i < len; j = i++) {
-			if (i === 0 && !(L.Polygon && (this._poly instanceof L.Polygon))) {
+			if (i === 0 && !(L.Polygon && this._poly instanceof L.Polygon)) {
 				continue;
 			}
 
@@ -3113,13 +3646,13 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		marker._index = index;
 
 		marker
-			.on('dragstart', this._onMarkerDragStart, this)
-			.on('drag', this._onMarkerDrag, this)
-			.on('dragend', this._fireEdit, this)
-			.on('touchmove', this._onTouchMove, this)
-			.on('touchend', this._fireEdit, this)
-			.on('MSPointerMove', this._onTouchMove, this)
-			.on('MSPointerUp', this._fireEdit, this);
+			.on("dragstart", this._onMarkerDragStart, this)
+			.on("drag", this._onMarkerDrag, this)
+			.on("dragend", this._fireEdit, this)
+			.on("touchmove", this._onTouchMove, this)
+			.on("touchend", this._fireEdit, this)
+			.on("MSPointerMove", this._onTouchMove, this)
+			.on("MSPointerUp", this._fireEdit, this);
 
 		this._markerGroup.addLayer(marker);
 
@@ -3127,7 +3660,7 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 	},
 
 	_onMarkerDragStart: function () {
-		this._poly.fire('editstart');
+		this._poly.fire("editstart");
 	},
 
 	_spliceLatLngs: function () {
@@ -3147,20 +3680,23 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		this._updateIndexes(i, -1);
 
 		marker
-			.off('dragstart', this._onMarkerDragStart, this)
-			.off('drag', this._onMarkerDrag, this)
-			.off('dragend', this._fireEdit, this)
-			.off('touchmove', this._onMarkerDrag, this)
-			.off('touchend', this._fireEdit, this)
-			.off('click', this._onMarkerClick, this)
-			.off('MSPointerMove', this._onTouchMove, this)
-			.off('MSPointerUp', this._fireEdit, this);
+			.off("dragstart", this._onMarkerDragStart, this)
+			.off("drag", this._onMarkerDrag, this)
+			.off("dragend", this._fireEdit, this)
+			.off("touchmove", this._onMarkerDrag, this)
+			.off("touchend", this._fireEdit, this)
+			.off("click", this._onMarkerClick, this)
+			.off("MSPointerMove", this._onTouchMove, this)
+			.off("MSPointerUp", this._fireEdit, this);
 	},
 
 	_fireEdit: function () {
 		this._poly.edited = true;
-		this._poly.fire('edit');
-		this._poly._map.fire(L.Draw.Event.EDITVERTEX, {layers: this._markerGroup, poly: this._poly});
+		this._poly.fire("edit");
+		this._poly._map.fire(L.Draw.Event.EDITVERTEX, {
+			layers: this._markerGroup,
+			poly: this._poly,
+		});
 	},
 
 	_onMarkerDrag: function (e) {
@@ -3177,20 +3713,20 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 				L.extend(marker._origLatLng, oldOrigLatLng);
 				marker.setLatLng(oldOrigLatLng);
 				var originalColor = poly.options.color;
-				poly.setStyle({color: this.options.drawError.color});
+				poly.setStyle({ color: this.options.drawError.color });
 				if (tooltip) {
 					tooltip.updateContent({
-						text: L.drawLocal.draw.handlers.polyline.error
+						text: L.drawLocal.draw.handlers.polyline.error,
 					});
 				}
 
 				// Reset everything back to normal after a second
 				setTimeout(function () {
-					poly.setStyle({color: originalColor});
+					poly.setStyle({ color: originalColor });
 					if (tooltip) {
 						tooltip.updateContent({
 							text: L.drawLocal.edit.handlers.edit.tooltip.text,
-							subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext
+							subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext,
 						});
 					}
 				}, 1000);
@@ -3201,7 +3737,9 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			marker._middleLeft.setLatLng(this._getMiddleLatLng(marker._prev, marker));
 		}
 		if (marker._middleRight) {
-			marker._middleRight.setLatLng(this._getMiddleLatLng(marker, marker._next));
+			marker._middleRight.setLatLng(
+				this._getMiddleLatLng(marker, marker._next)
+			);
 		}
 
 		//refresh the bounds when draging
@@ -3210,12 +3748,11 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		var latlngs = this._poly.getLatLngs();
 		this._poly._convertLatLngs(latlngs, true);
 		this._poly.redraw();
-		this._poly.fire('editdrag');
+		this._poly.fire("editdrag");
 	},
 
 	_onMarkerClick: function (e) {
-
-		var minPoints = L.Polygon && (this._poly instanceof L.Polygon) ? 4 : 3,
+		var minPoints = L.Polygon && this._poly instanceof L.Polygon ? 4 : 3,
 			marker = e.target;
 
 		// If removing this point would create an invalid polyline/polygon don't remove
@@ -3240,10 +3777,8 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		// create a ghost marker in place of the removed one
 		if (marker._prev && marker._next) {
 			this._createMiddleMarker(marker._prev, marker._next);
-
 		} else if (!marker._prev) {
 			marker._next._middleLeft = null;
-
 		} else if (!marker._next) {
 			marker._prev._middleRight = null;
 		}
@@ -3254,13 +3789,18 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 	_onContextMenu: function (e) {
 		var marker = e.target;
 		var poly = this._poly;
-		this._poly._map.fire(L.Draw.Event.MARKERCONTEXT, {marker: marker, layers: this._markerGroup, poly: this._poly});
+		this._poly._map.fire(L.Draw.Event.MARKERCONTEXT, {
+			marker: marker,
+			layers: this._markerGroup,
+			poly: this._poly,
+		});
 		L.DomEvent.stopPropagation;
 	},
 
 	_onTouchMove: function (e) {
-
-		var layerPoint = this._map.mouseEventToLayerPoint(e.originalEvent.touches[0]),
+		var layerPoint = this._map.mouseEventToLayerPoint(
+				e.originalEvent.touches[0]
+			),
 			latlng = this._map.layerPointToLatLng(layerPoint),
 			marker = e.target;
 
@@ -3270,7 +3810,9 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			marker._middleLeft.setLatLng(this._getMiddleLatLng(marker._prev, marker));
 		}
 		if (marker._middleRight) {
-			marker._middleRight.setLatLng(this._getMiddleLatLng(marker, marker._next));
+			marker._middleRight.setLatLng(
+				this._getMiddleLatLng(marker, marker._next)
+			);
 		}
 
 		this._poly.redraw();
@@ -3297,14 +3839,12 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		marker1._middleRight = marker2._middleLeft = marker;
 
 		onDragStart = function () {
-			marker.off('touchmove', onDragStart, this);
+			marker.off("touchmove", onDragStart, this);
 			var i = marker2._index;
 
 			marker._index = i;
 
-			marker
-				.off('click', onClick, this)
-				.on('click', this._onMarkerClick, this);
+			marker.off("click", onClick, this).on("click", this._onMarkerClick, this);
 
 			latlng.lat = marker.getLatLng().lat;
 			latlng.lng = marker.getLatLng().lng;
@@ -3318,13 +3858,13 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			this._updatePrevNext(marker1, marker);
 			this._updatePrevNext(marker, marker2);
 
-			this._poly.fire('editstart');
+			this._poly.fire("editstart");
 		};
 
 		onDragEnd = function () {
-			marker.off('dragstart', onDragStart, this);
-			marker.off('dragend', onDragEnd, this);
-			marker.off('touchmove', onDragStart, this);
+			marker.off("dragstart", onDragStart, this);
+			marker.off("dragend", onDragEnd, this);
+			marker.off("touchmove", onDragStart, this);
 
 			this._createMiddleMarker(marker1, marker);
 			this._createMiddleMarker(marker, marker2);
@@ -3337,10 +3877,10 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 		};
 
 		marker
-			.on('click', onClick, this)
-			.on('dragstart', onDragStart, this)
-			.on('dragend', onDragEnd, this)
-			.on('touchmove', onDragStart, this);
+			.on("click", onClick, this)
+			.on("dragstart", onDragStart, this)
+			.on("dragend", onDragEnd, this)
+			.on("touchmove", onDragStart, this);
 
 		this._markerGroup.addLayer(marker);
 	},
@@ -3360,37 +3900,37 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 			p2 = map.project(marker2.getLatLng());
 
 		return map.unproject(p1._add(p2)._divideBy(2));
-	}
+	},
 });
 
-L.Polyline.addInitHook(function () {
+// L.Polyline.addInitHook(function () {
 
-	// Check to see if handler has already been initialized. This is to support versions of Leaflet that still have L.Handler.PolyEdit
-	if (this.editing) {
-		return;
-	}
+// 	// Check to see if handler has already been initialized. This is to support versions of Leaflet that still have L.Handler.PolyEdit
+// 	if (this.editing) {
+// 		return;
+// 	}
 
-	if (L.Edit.Poly) {
+// 	if (L.Edit.Poly) {
 
-		this.editing = new L.Edit.Poly(this);
+// 		this.editing = new L.Edit.Poly(this);
 
-		if (this.options.editable) {
-			this.editing.enable();
-		}
-	}
+// 		if (this.options.editable) {
+// 			this.editing.enable();
+// 		}
+// 	}
 
-	this.on('add', function () {
-		if (this.editing && this.editing.enabled()) {
-			this.editing.addHooks();
-		}
-	});
+// 	this.on('add', function () {
+// 		if (this.editing && this.editing.enabled()) {
+// 			this.editing.addHooks();
+// 		}
+// 	});
 
-	this.on('remove', function () {
-		if (this.editing && this.editing.enabled()) {
-			this.editing.removeHooks();
-		}
-	});
-});
+// 	this.on('remove', function () {
+// 		if (this.editing && this.editing.enabled()) {
+// 			this.editing.removeHooks();
+// 		}
+// 	});
+// });
 
 
 
@@ -3403,19 +3943,21 @@ L.Edit.SimpleShape = L.Handler.extend({
 	options: {
 		moveIcon: new L.DivIcon({
 			iconSize: new L.Point(8, 8),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-move'
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-edit-move",
 		}),
 		resizeIcon: new L.DivIcon({
 			iconSize: new L.Point(8, 8),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-resize'
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-edit-resize",
 		}),
 		touchMoveIcon: new L.DivIcon({
 			iconSize: new L.Point(20, 20),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-move leaflet-touch-icon'
+			className:
+				"leaflet-div-icon leaflet-editing-icon leaflet-edit-move leaflet-touch-icon",
 		}),
 		touchResizeIcon: new L.DivIcon({
 			iconSize: new L.Point(20, 20),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-resize leaflet-touch-icon'
+			className:
+				"leaflet-div-icon leaflet-editing-icon leaflet-edit-resize leaflet-touch-icon",
 		}),
 	},
 
@@ -3458,6 +4000,7 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 		if (shape._map) {
 			this._unbindMarker(this._moveMarker);
+			this._unbindMarker(this._rotateMarker);
 
 			for (var i = 0, l = this._resizeMarkers.length; i < l; i++) {
 				this._unbindMarker(this._resizeMarkers[i]);
@@ -3488,6 +4031,9 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 		// Create edge marker
 		this._createResizeMarker();
+
+		// Create rotate marker
+		this._createRotateMarker();
 	},
 
 	_createMoveMarker: function () {
@@ -3498,12 +4044,16 @@ L.Edit.SimpleShape = L.Handler.extend({
 		// Children override
 	},
 
+	_createRotateMarker: function () {
+		// Children override
+	},
+
 	_createMarker: function (latlng, icon) {
 		// Extending L.Marker in TouchEvents.js to include touch.
 		var marker = new L.Marker.Touch(latlng, {
 			draggable: true,
 			icon: icon,
-			zIndexOffset: 10
+			zIndexOffset: 10,
 		});
 
 		this._bindMarker(marker);
@@ -3515,38 +4065,39 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 	_bindMarker: function (marker) {
 		marker
-			.on('dragstart', this._onMarkerDragStart, this)
-			.on('drag', this._onMarkerDrag, this)
-			.on('dragend', this._onMarkerDragEnd, this)
-			.on('touchstart', this._onTouchStart, this)
-			.on('touchmove', this._onTouchMove, this)
-			.on('MSPointerMove', this._onTouchMove, this)
-			.on('touchend', this._onTouchEnd, this)
-			.on('MSPointerUp', this._onTouchEnd, this);
+			.on("dragstart", this._onMarkerDragStart, this)
+			.on("drag", this._onMarkerDrag, this)
+			.on("dragend", this._onMarkerDragEnd, this)
+			.on("touchstart", this._onTouchStart, this)
+			.on("touchmove", this._onTouchMove, this)
+			.on("MSPointerMove", this._onTouchMove, this)
+			.on("touchend", this._onTouchEnd, this)
+			.on("MSPointerUp", this._onTouchEnd, this);
 	},
 
 	_unbindMarker: function (marker) {
+		if (marker === undefined) return;
 		marker
-			.off('dragstart', this._onMarkerDragStart, this)
-			.off('drag', this._onMarkerDrag, this)
-			.off('dragend', this._onMarkerDragEnd, this)
-			.off('touchstart', this._onTouchStart, this)
-			.off('touchmove', this._onTouchMove, this)
-			.off('MSPointerMove', this._onTouchMove, this)
-			.off('touchend', this._onTouchEnd, this)
-			.off('MSPointerUp', this._onTouchEnd, this);
+			.off("dragstart", this._onMarkerDragStart, this)
+			.off("drag", this._onMarkerDrag, this)
+			.off("dragend", this._onMarkerDragEnd, this)
+			.off("touchstart", this._onTouchStart, this)
+			.off("touchmove", this._onTouchMove, this)
+			.off("MSPointerMove", this._onTouchMove, this)
+			.off("touchend", this._onTouchEnd, this)
+			.off("MSPointerUp", this._onTouchEnd, this);
 	},
 
 	_onMarkerDragStart: function (e) {
 		var marker = e.target;
 		marker.setOpacity(0);
 
-		this._shape.fire('editstart');
+		this._shape.fire("editstart");
 	},
 
 	_fireEdit: function () {
 		this._shape.edited = true;
-		this._shape.fire('edit');
+		this._shape.fire("edit");
 	},
 
 	_onMarkerDrag: function (e) {
@@ -3555,12 +4106,14 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 		if (marker === this._moveMarker) {
 			this._move(latlng);
+		} else if (marker === this._rotateMarker) {
+			this._rotate(latlng);
 		} else {
 			this._resize(latlng);
 		}
 
 		this._shape.redraw();
-		this._shape.fire('editdrag');
+		this._shape.fire("editdrag");
 	},
 
 	_onMarkerDragEnd: function (e) {
@@ -3573,7 +4126,7 @@ L.Edit.SimpleShape = L.Handler.extend({
 	_onTouchStart: function (e) {
 		L.Edit.SimpleShape.prototype._onMarkerDragStart.call(this, e);
 
-		if (typeof(this._getCorners) === 'function') {
+		if (typeof this._getCorners === "function") {
 			// Save a reference to the opposite point
 			var corners = this._getCorners(),
 				marker = e.target,
@@ -3587,16 +4140,20 @@ L.Edit.SimpleShape = L.Handler.extend({
 			this._toggleCornerMarkers(0, currentCornerIndex);
 		}
 
-		this._shape.fire('editstart');
+		this._shape.fire("editstart");
 	},
 
 	_onTouchMove: function (e) {
-		var layerPoint = this._map.mouseEventToLayerPoint(e.originalEvent.touches[0]),
+		var layerPoint = this._map.mouseEventToLayerPoint(
+				e.originalEvent.touches[0]
+			),
 			latlng = this._map.layerPointToLatLng(layerPoint),
 			marker = e.target;
 
 		if (marker === this._moveMarker) {
 			this._move(latlng);
+		} else if (marker === this._rotateMarker) {
+			this._rotate(latlng);
 		} else {
 			this._resize(latlng);
 		}
@@ -3621,7 +4178,11 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 	_resize: function () {
 		// Children override
-	}
+	},
+
+	_rotate: function () {
+		// Children override
+	},
 });
 
 
@@ -3866,6 +4427,249 @@ L.Circle.addInitHook(function () {
 			this.editing.enable();
 		}
 	}
+});
+
+
+
+L.Edit = L.Edit || {};
+/**
+ * @class L.Edit.CircleMarker
+ * @aka Edit.Circle
+ * @inherits L.Edit.SimpleShape
+ */
+L.Edit.ThanhCai = L.Edit.SimpleShape.extend({
+	initialize: function (shape, options) {
+		L.Edit.SimpleShape.prototype.initialize.call(this, shape, options);
+	},
+
+	_createMoveMarker: function () {
+		this._moveMarker = this._createMarker(
+			this._shape.getCenterCus(),
+			this.options.moveIcon
+		);
+	},
+
+	_createResizeMarker: function () {
+		// To avoid an undefined check in L.Edit.SimpleShape.removeHooks
+		this._resizeMarkers = [];
+		const latLngs = this._shape.getLatLngs();
+		const pA = latLngs[0];
+		this._resizeMarkers.push(this._createMarker(pA, this.options.resizeIcon));
+	},
+
+	_createRotateMarker: function () {
+		const latLng = this._shape.getRotateMarker();
+		this._rotateMarker = this._createMarker(latLng, this.options.moveIcon);
+	},
+
+	_move: function (latlng) {
+		this._shape.move(latlng);
+		this._updateMarkers();
+		this._map.fire(L.Draw.Event.EDITMOVE, { layer: this._shape });
+	},
+
+	_resize: function (latlng) {
+		this._shape.resize(latlng);
+		this._updateMarkers();
+		this._map.fire(L.Draw.Event.EDITRESIZE, { layer: this._shape });
+	},
+
+	_rotate: function (latlng) {
+		this._shape.rotate(latlng);
+		this._updateMarkers();
+	},
+
+	_updateMarkers: function () {
+		this._resizeMarkers[0].setLatLng(this._shape.getLatLngs()[0]);
+		this._rotateMarker.setLatLng(this._shape.getRotateMarker());
+	},
+});
+
+L.ThanhCai.addInitHook(function () {
+	if (this.editing) {
+		return;
+	}
+
+	if (L.Edit.ThanhCai) {
+		this.editing = new L.Edit.ThanhCai(this);
+
+		if (this.options.editable) {
+			this.editing.enable();
+		}
+	}
+
+	this.on("add", function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.addHooks();
+		}
+	});
+
+	this.on("remove", function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.removeHooks();
+		}
+	});
+});
+
+
+
+L.Edit = L.Edit || {};
+/**
+ * @class L.Edit.CircleMarker
+ * @aka Edit.Circle
+ * @inherits L.Edit.SimpleShape
+ */
+L.Edit.Role = L.Edit.SimpleShape.extend({
+	_createMoveMarker: function () {
+		this._moveMarker = this._createMarker(
+			this._shape.getCenterCus(),
+			this.options.moveIcon
+		);
+	},
+
+	_createResizeMarker: function () {
+		// To avoid an undefined check in L.Edit.SimpleShape.removeHooks
+		const latLngs = this._shape.getLatLngs();
+		this._resizeMarkers = [];
+		this._resizeMarkers.push(
+			this._createMarker(latLngs[0], this.options.resizeIcon)
+		);
+	},
+
+	_createRotateMarker: function () {
+		const latLng = this._shape.getRotateMarker();
+		this._rotateMarker = this._createMarker(latLng, this.options.moveIcon);
+	},
+
+	_move: function (latlng) {
+		this._shape.move(latlng);
+		this._updateMarkers();
+		this._map.fire(L.Draw.Event.EDITMOVE, { layer: this._shape });
+	},
+
+	_resize: function (latlng) {
+		this._shape.resize(latlng);
+		this._updateMarkers();
+		this._map.fire(L.Draw.Event.EDITRESIZE, { layer: this._shape });
+	},
+
+	_rotate: function (latlng) {
+		this._shape.rotate(latlng);
+		this._updateMarkers();
+	},
+
+	_updateMarkers: function() {
+		this._resizeMarkers[0].setLatLng(this._shape.getLatLngs()[0]);
+		this._rotateMarker.setLatLng(this._shape.getRotateMarker());
+	},
+});
+
+L.Role.addInitHook(function () {
+	if (this.editing) {
+		return;
+	}
+
+	if (L.Edit.Role) {
+		this.editing = new L.Edit.Role(this);
+
+		if (this.options.editable) {
+			this.editing.enable();
+		}
+	}
+
+	this.on("add", function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.addHooks();
+		}
+	});
+
+	this.on("remove", function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.removeHooks();
+		}
+	});
+});
+
+
+
+L.Edit = L.Edit || {};
+/**
+ * @class L.Edit.CircleMarker
+ * @aka Edit.Circle
+ * @inherits L.Edit.SimpleShape
+ */
+L.Edit.MayBienAp = L.Edit.SimpleShape.extend({
+	initialize: function (shape, options) {
+		L.Edit.SimpleShape.prototype.initialize.call(this, shape, options);
+	},
+
+	_createMoveMarker: function () {
+		this._moveMarker = this._createMarker(
+			this._shape._latlng,
+			this.options.moveIcon
+		);
+	},
+
+	_createResizeMarker: function () {
+		// To avoid an undefined check in L.Edit.SimpleShape.removeHooks
+		this._resizeMarkers = [];
+		this._resizeMarkers.push(
+			this._createMarker(this._shape._getLatLngC(), this.options.resizeIcon)
+		);
+	},
+
+	_createRotateMarker: function () {
+		const latLng = this._shape.getRotateMarker();
+		this._rotateMarker = this._createMarker(latLng, this.options.moveIcon);
+	},
+
+	_move: function (latlng) {
+		this._shape.move(latlng);
+		this._updateMarkers();
+		this._map.fire(L.Draw.Event.EDITMOVE, { layer: this._shape });
+	},
+
+	_resize: function (latlng) {
+		this._shape.resize(latlng);
+		this._updateMarkers();
+		this._map.fire(L.Draw.Event.EDITRESIZE, { layer: this._shape });
+	},
+
+	_rotate: function (latlng) {
+		this._shape.rotate(latlng);
+		this._updateMarkers();
+	},
+
+	_updateMarkers: function () {
+		this._resizeMarkers[0].setLatLng(this._shape._getLatLngC());
+		this._rotateMarker.setLatLng(this._shape.getRotateMarker());
+	},
+});
+
+L.MayBienAp.addInitHook(function () {
+	if (this.editing) {
+		return;
+	}
+
+	if (L.Edit.MayBienAp) {
+		this.editing = new L.Edit.MayBienAp(this);
+
+		if (this.options.editable) {
+			this.editing.enable();
+		}
+	}
+
+	this.on("add", function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.addHooks();
+		}
+	});
+
+	this.on("remove", function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.removeHooks();
+		}
+	});
 });
 
 
@@ -5184,526 +5988,6 @@ L.Polygon.include({
 
 
 
-L.Renderer.include({
-	_updateMayBienAp: function (layer) {
-		const o1 = layer._xuLy(layer._getLatLngI1(), layer._getRadiusR1());
-		const i1 = o1[0];
-		const r1x = Math.max(Math.round(o1[1]), 1);
-		const r1y = Math.max(Math.round(o1[2]), 1) || r1x;
-
-		const o2 = layer._xuLy(layer._getLatLngI2(), layer._getRadiusR2());
-		const i2 = o2[0];
-		const r2x = Math.max(Math.round(o2[1]), 1);
-		const r2y = Math.max(Math.round(o2[2]), 1) || r2x;
-
-		const arc1 = "a" + r1x + "," + r1y + " 0 1,0 ";
-
-		const arc2 = "a" + r2x + "," + r2y + " 0 1,0 ";
-
-		const pA = layer._xuLy(layer._getLatLngA(), layer._getRadiusR1())[0];
-		const pN = layer._xuLy(layer._getLatLngN(), layer._getRadiusR1())[0];
-		const pB = layer._xuLy(layer._getLatLngB(), layer._getRadiusR1())[0];
-
-		const arc3 =
-			"M" +
-			pA.x +
-			" " +
-			pA.y +
-			" Q " +
-			pN.x +
-			" " +
-			pN.y +
-			" " +
-			pB.x +
-			" " +
-			pB.y;
-
-		var d = layer._empty()
-			? "M0 0"
-			: "M" +
-			  (i1.x - r1x) +
-			  "," +
-			  i1.y +
-			  arc1 +
-			  r1x * 2 +
-			  ",0 " +
-			  arc1 +
-			  -r1y * 2 +
-			  ",0 " +
-			  "M" +
-			  (i2.x - r2x) +
-			  "," +
-			  i2.y +
-			  arc2 +
-			  r2x * 2 +
-			  ",0 " +
-			  arc2 +
-			  -r2y * 2 +
-			  ",0 " +
-			  arc3;
-
-		this._setPath(layer, d);
-	},
-});
-
-//#region L.MayBienAp
-L.MayBienAp = L.Path.extend({
-	options: {
-		fill: false,
-		chieuDai: 150,
-		gocXoay: 0,
-	},
-
-	initialize: function (latlng, options) {
-		L.setOptions(this, options);
-		this.cloneOptions();
-		this._latlng = L.latLng(latlng);
-	},
-
-	// @method setLatLng(latLng: LatLng): this
-	// Sets the position of a circle marker to a new location.
-	setLatLng: function (latlng) {
-		this._latlng = L.latLng(latlng);
-		this.redraw();
-		return this.fire("move", { latlng: this._latlng });
-	},
-
-	// @method getLatLng(): LatLng
-	// Returns the current geographical position of the circle marker
-	getLatLng: function () {
-		return this._latlng;
-	},
-
-	_getRadiusR1: function () {
-		return (
-			(this.options.chieuDai * 4) / (2 + 3 * Math.sin(Math.acos(1 / 3)) * 4)
-		);
-	},
-
-	_getLatLngI1: function () {
-		return L.GeometryUtil.destination(
-			this._latlng,
-			this.options.gocXoay - 90,
-			this._getRadiusR1() / 4
-		);
-	},
-
-	_getRadiusR2: function () {
-		return 0.6 * this._getRadiusR1();
-	},
-
-	_getLatLngI2: function () {
-		return L.GeometryUtil.destination(
-			this._getLatLngC(),
-			this.options.gocXoay - 90,
-			this._getRadiusR2()
-		);
-	},
-
-	_getLatLngA: function () {
-		return L.GeometryUtil.destination(
-			this._latlng,
-			this.options.gocXoay - 90,
-			this.options.chieuDai / 2
-		);
-	},
-
-	_getLatLngB: function () {
-		return L.GeometryUtil.destination(
-			this._getLatLngI1(),
-			this.options.gocXoay,
-			this._getRadiusR1()
-		);
-	},
-
-	_getLatLngC: function () {
-		return L.GeometryUtil.destination(
-			this._latlng,
-			this.options.gocXoay + 90,
-			this.options.chieuDai / 2
-		);
-	},
-
-	_getLatLngD: function () {
-		return L.GeometryUtil.destination(
-			this._getLatLngI1(),
-			this.options.gocXoay + 180,
-			this._getRadiusR1()
-		);
-	},
-
-	_getLatLngE: function () {
-		return L.GeometryUtil.destination(
-			this._getLatLngI2(),
-			this.options.gocXoay,
-			this._getRadiusR2()
-		);
-	},
-
-	_getLatLngF: function () {
-		return L.GeometryUtil.destination(
-			this._getLatLngI2(),
-			this.options.gocXoay + 180,
-			this._getRadiusR2()
-		);
-	},
-
-	_getLatLngM: function () {
-		const angleAB = L.GeometryUtil.angle(
-			this._map,
-			this._getLatLngA(),
-			this._getLatLngB()
-		);
-		const d = this._getLatLngA().distanceTo(this._getLatLngB());
-		return L.GeometryUtil.destination(this._getLatLngA(), angleAB, d / 2);
-	},
-
-	_getLatLngN: function () {
-		const pM = this._getLatLngM();
-		const pI1 = this._getLatLngI1();
-		const angleMB = L.GeometryUtil.angle(this._map, pM, this._getLatLngB());
-		const angleMI1 = L.GeometryUtil.angle(this._map, pM, pI1);
-		const angleMBMI1 = angleMI1 - angleMB;
-		const d = pM.distanceTo(pI1);
-		const dI1AB = Math.sin((angleMBMI1 * Math.PI) / 180) * d;
-		return L.GeometryUtil.destination(
-			this._getLatLngM(),
-			angleMB - 90,
-			(3 * dI1AB) / 4
-		);
-	},
-
-	getRotateMarker: function () {
-		return L.GeometryUtil.destination(
-			this._latlng,
-			this.options.gocXoay,
-			(3 * this._getRadiusR1()) / 2
-		);
-	},
-
-	_xuLy: function (latlng, radius) {
-		var lng = latlng.lng,
-			lat = latlng.lat,
-			map = this._map,
-			crs = map.options.crs,
-			retP,
-			retRadiusX,
-			retRadiusY;
-
-		if (crs.distance === L.CRS.Earth.distance) {
-			var d = Math.PI / 180,
-				latR = radius / L.CRS.Earth.R / d,
-				top = map.project([lat + latR, lng]),
-				bottom = map.project([lat - latR, lng]),
-				p = top.add(bottom).divideBy(2),
-				lat2 = map.unproject(p).lat,
-				lngR =
-					Math.acos(
-						(Math.cos(latR * d) - Math.sin(lat * d) * Math.sin(lat2 * d)) /
-							(Math.cos(lat * d) * Math.cos(lat2 * d))
-					) / d;
-
-			if (isNaN(lngR) || lngR === 0) {
-				lngR = latR / Math.cos((Math.PI / 180) * lat); // Fallback for edge case, #2425
-			}
-
-			retP = p.subtract(map.getPixelOrigin());
-			retRadiusX = isNaN(lngR) ? 0 : p.x - map.project([lat2, lng - lngR]).x;
-			retRadiusY = p.y - top.y;
-		} else {
-			var latlng2 = crs.unproject(crs.project(latlng).subtract([radius, 0]));
-
-			retP = map.latLngToLayerPoint(latlng);
-			retRadiusX = retP.x - map.latLngToLayerPoint(latlng2).x;
-			retRadiusY = radius;
-		}
-
-		return [retP, retRadiusX, retRadiusY];
-	},
-
-	_project: function () {
-		this._updateBounds();
-	},
-
-	_updateBounds: function () {
-		const bounds = this.getBounds();
-		this._pxBounds = L.bounds(
-			this._map.latLngToLayerPoint(bounds._northEast),
-			this._map.latLngToLayerPoint(bounds._southWest)
-		);
-	},
-
-	_update: function () {
-		if (this._map) {
-			this._updatePath();
-		}
-	},
-
-	_updatePath: function () {
-		this._renderer._updateMayBienAp(this);
-	},
-
-	_empty: function () {
-		return this._radius && !this._renderer._bounds.intersects(this._pxBounds);
-	},
-
-	// Needed by the `Canvas` renderer for interactivity
-	_containsPoint: function (p) {
-		return p.distanceTo(this._point) <= this._radius + this._clickTolerance();
-	},
-
-	// @method getBounds(): LatLngBounds
-	// Returns the `LatLngBounds` of the path.
-	getBounds: function () {
-		const pA = this._getLatLngA();
-		const pC = this._getLatLngC();
-
-		return L.latLngBounds(
-			L.GeometryUtil.destination(
-				pC,
-				-this.options.gocXoay,
-				this._getRadiusR1()
-			),
-			L.GeometryUtil.destination(
-				pA,
-				this.options.gocXoay + 180,
-				this._getRadiusR1()
-			)
-		);
-	},
-	rotate: function (latlng) {
-		const map = this._map;
-		const centerPoint = this._latlng;
-		const angle = L.GeometryUtil.angle(map, centerPoint, latlng);
-		this.options.gocXoay = angle;
-		this.redraw();
-	},
-	resize: function (latlng) {
-		const map = this._map;
-		const pC = this._getLatLngC();
-		const centerPoint = this._latlng;
-		const angleMC = L.GeometryUtil.angle(map, centerPoint, pC);
-		const angleMCDetal = L.GeometryUtil.angle(map, centerPoint, latlng);
-		const angle = Math.abs(angleMCDetal - angleMC);
-		const d =
-			Math.cos((angle * Math.PI) / 180) * centerPoint.distanceTo(latlng);
-		this.options.chieuDai = Math.abs(2 * d);
-		this.redraw();
-	},
-	move: function (latlng) {
-		this._latlng = latlng;
-		this.redraw();
-	},
-	cloneOptions: function () {
-		this.optionsClone = {
-			gocXoay: this.options.gocXoay,
-			chieuDai: this.options.chieuDai,
-		};
-	},
-});
-
-L.mayBienAp = function (latlng, options) {
-	return new L.MayBienAp(latlng, options);
-};
-//#endregion
-
-// Thêm hàm/thuộc tính vào lớp Layer đã tồn tại.
-L.Layer.include({
-	// Hàm trả về centerPoint của layer
-	getCenterCus: function () {
-		const pNE = this._map.project(this._bounds._northEast, this._map.getZoom());
-		const pSW = this._map.project(this._bounds._southWest, this._map.getZoom());
-		return this._map.unproject(
-			L.point((pNE.x + pSW.x) / 2, (pNE.y + pSW.y) / 2),
-			this._map.getZoom()
-		);
-	},
-});
-
-//#region L.ThanhCai
-L.ThanhCai = L.Polyline.extend({
-	options: {
-		chieuDai: 300,
-		gocXoay: 0,
-		distanceRotateMarker: 20,
-	},
-	initialize: function (centerPoint, options) {
-		L.setOptions(this, options);
-		this.cloneOptions();
-		const latlngs = this._thanhCaiLatLngs(centerPoint);
-		L.Polyline.prototype.initialize.call(this, latlngs, options);
-	},
-	_thanhCaiLatLngs: function (centerPoint) {
-		const gocXoayA = this.options.gocXoay;
-		const gocXoayB = gocXoayA + 180;
-		const diemA = L.GeometryUtil.destination(
-			centerPoint,
-			gocXoayA,
-			this.options.chieuDai / 2
-		);
-		const diemB = L.GeometryUtil.destination(
-			centerPoint,
-			gocXoayB,
-			this.options.chieuDai / 2
-		);
-		return [diemA, diemB];
-	},
-	getRotateMarker: function () {
-		const centerPoint = this.getCenterCus();
-		return L.GeometryUtil.destination(
-			centerPoint,
-			this.options.gocXoay - 90,
-			this.options.distanceRotateMarker
-		);
-	},
-	rotate: function (latlng) {
-		const map = this._map;
-		const centerPoint = this.getCenterCus();
-		const angle = L.GeometryUtil.angle(map, centerPoint, latlng);
-		this.options.gocXoay = angle + 90;
-		this.setLatLngs(this._thanhCaiLatLngs(centerPoint));
-	},
-	resize: function (latlng) {
-		const map = this._map;
-		const latLngs = this.getLatLngs();
-		const centerPoint = this.getCenterCus();
-		const pA = latLngs[0];
-		const angleMA = L.GeometryUtil.angle(map, centerPoint, pA);
-		const angleMADetal = L.GeometryUtil.angle(map, centerPoint, latlng);
-		const angle = Math.abs(angleMADetal - angleMA);
-		const d =
-			Math.cos((angle * Math.PI) / 180) * centerPoint.distanceTo(latlng);
-		this.options.chieuDai = Math.abs(2 * d);
-		this.setLatLngs(this._thanhCaiLatLngs(centerPoint));
-	},
-	move: function (latlng) {
-		this.setLatLngs(this._thanhCaiLatLngs(latlng));
-	},
-	cloneOptions: function () {
-		this.optionsClone = {
-			gocXoay: this.options.gocXoay,
-			chieuDai: this.options.chieuDai,
-		};
-	},
-});
-
-L.thanhCai = function (latlng, map, options) {
-	return new L.ThanhCai(latlng, map, options);
-};
-//#endregion
-
-//#region L.Role
-L.Role = L.Polyline.extend({
-	options: {
-		chieuDai: 50,
-		chieuRong: 25,
-		gocXoay: 0,
-	},
-	initialize: function (centerPoint, options) {
-		L.setOptions(this, options);
-		this.cloneOptions();
-		const latlngs = this._roleLatLngs(centerPoint);
-		L.Polyline.prototype.initialize.call(this, latlngs, options);
-	},
-	_roleLatLngs: function (centerPoint) {
-		const gocXoayM = -this.options.gocXoay;
-		const gocXoayA = -90 - this.options.gocXoay;
-		const gocXoayB = gocXoayA + 180;
-		const gocXoayC = 180 + gocXoayM;
-		const gocXoayD = 180 + gocXoayM;
-		const trungDiemAB = L.GeometryUtil.destination(
-			centerPoint,
-			-gocXoayM,
-			this.options.chieuRong / 2
-		);
-		const diemA = L.GeometryUtil.destination(
-			trungDiemAB,
-			-gocXoayA,
-			this.options.chieuDai / 2
-		);
-		const diemB = L.GeometryUtil.destination(
-			trungDiemAB,
-			-gocXoayB,
-			this.options.chieuDai / 2
-		);
-		const diemC = L.GeometryUtil.destination(
-			diemB,
-			-gocXoayC,
-			this.options.chieuRong
-		);
-		const diemD = L.GeometryUtil.destination(
-			diemA,
-			-gocXoayD,
-			this.options.chieuRong
-		);
-		return [diemA, diemB, diemC, diemD, diemA];
-	},
-	getRotateMarker: function () {
-		const centerPoint = this.getCenterCus();
-		return L.GeometryUtil.destination(
-			centerPoint,
-			this.options.gocXoay,
-			this.options.chieuRong
-		);
-	},
-	move: function (latlng) {
-		this.setLatLngs(this._roleLatLngs(latlng));
-	},
-	resize: function (latlng) {
-		const latLngs = this.getLatLngs();
-		const centerPoint = this.getCenterCus();
-		const map = this._map;
-		const pA = latLngs[0];
-		const pB = latLngs[1];
-		const pD = latLngs[3];
-		const trungDiemAB = L.GeometryUtil.closestOnSegment(
-			map,
-			centerPoint,
-			pA,
-			pB
-		);
-		const trungDiemAD = L.GeometryUtil.closestOnSegment(
-			map,
-			centerPoint,
-			pA,
-			pD
-		);
-		const angleMAB_A = L.GeometryUtil.angle(map, trungDiemAB, pA);
-		const angleMAD_A = L.GeometryUtil.angle(map, trungDiemAD, pA);
-		const angleMAB_ADetal = L.GeometryUtil.angle(map, trungDiemAB, latlng);
-		const angleMAD_ADetal = L.GeometryUtil.angle(map, trungDiemAD, latlng);
-		const angleA = Math.abs(angleMAB_ADetal - angleMAB_A);
-		const angleB = Math.abs(angleMAD_ADetal - angleMAD_A);
-		const dxAB =
-			Math.cos((angleA * Math.PI) / 180) * trungDiemAB.distanceTo(latlng);
-		const dxAD =
-			Math.cos((angleB * Math.PI) / 180) * trungDiemAD.distanceTo(latlng);
-		this.options.chieuDai = Math.abs(this.options.chieuDai / 2 + dxAB);
-		this.options.chieuRong = Math.abs(this.options.chieuRong / 2 + dxAD);
-		this.setLatLngs(this._roleLatLngs(centerPoint));
-	},
-	rotate: function (latlng) {
-		const map = this._map;
-		const centerPoint = this.getCenterCus();
-		const angle = L.GeometryUtil.angle(map, centerPoint, latlng);
-		this.options.gocXoay = angle;
-		this.setLatLngs(this._roleLatLngs(centerPoint));
-	},
-	cloneOptions: function () {
-		this.optionsClone = {
-			chieuDai: this.options.chieuDai,
-			chieuRong: this.options.chieuRong,
-			gocXoay: this.options.gocXoay,
-		};
-	},
-});
-
-L.role = function (latlng, options) {
-	return new L.Role(latlng, options);
-};
-
-
-
 /**
  * @class L.Control.Draw
  * @aka L.Draw
@@ -6622,7 +6906,7 @@ L.EditToolbar = L.Toolbar.extend({
  */
 L.EditToolbar.Edit = L.Handler.extend({
 	statics: {
-		TYPE: 'edit'
+		TYPE: "edit",
 	},
 
 	// @method intialize(): void
@@ -6635,7 +6919,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 		this._featureGroup = options.featureGroup;
 
 		if (!(this._featureGroup instanceof L.FeatureGroup)) {
-			throw new Error('options.featureGroup must be a L.FeatureGroup');
+			throw new Error("options.featureGroup must be a L.FeatureGroup");
 		}
 
 		this._uneditedLayerProps = {};
@@ -6643,7 +6927,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
 		this.type = L.EditToolbar.Edit.TYPE;
 
-		var version = L.version.split('.');
+		var version = L.version.split(".");
 		//If Version is >= 1.2.0
 		if (parseInt(version[0], 10) === 1 && parseInt(version[1], 10) >= 2) {
 			L.EditToolbar.Edit.include(L.Evented.prototype);
@@ -6658,16 +6942,16 @@ L.EditToolbar.Edit = L.Handler.extend({
 		if (this._enabled || !this._hasAvailableLayers()) {
 			return;
 		}
-		this.fire('enabled', {handler: this.type});
+		this.fire("enabled", { handler: this.type });
 		//this disable other handlers
 
-		this._map.fire(L.Draw.Event.EDITSTART, {handler: this.type});
+		this._map.fire(L.Draw.Event.EDITSTART, { handler: this.type });
 		//allow drawLayer to be updated before beginning edition.
 
 		L.Handler.prototype.enable.call(this);
 		this._featureGroup
-			.on('layeradd', this._enableLayerEdit, this)
-			.on('layerremove', this._disableLayerEdit, this);
+			.on("layeradd", this._enableLayerEdit, this)
+			.on("layerremove", this._disableLayerEdit, this);
 	},
 
 	// @method disable(): void
@@ -6677,11 +6961,11 @@ L.EditToolbar.Edit = L.Handler.extend({
 			return;
 		}
 		this._featureGroup
-			.off('layeradd', this._enableLayerEdit, this)
-			.off('layerremove', this._disableLayerEdit, this);
+			.off("layeradd", this._enableLayerEdit, this)
+			.off("layerremove", this._disableLayerEdit, this);
 		L.Handler.prototype.disable.call(this);
-		this._map.fire(L.Draw.Event.EDITSTOP, {handler: this.type});
-		this.fire('disabled', {handler: this.type});
+		this._map.fire(L.Draw.Event.EDITSTOP, { handler: this.type });
+		this.fire("disabled", { handler: this.type });
 	},
 
 	// @method addHooks(): void
@@ -6697,7 +6981,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 			this._tooltip = new L.Draw.Tooltip(this._map);
 			this._tooltip.updateContent({
 				text: L.drawLocal.edit.handlers.edit.tooltip.text,
-				subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext
+				subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext,
 			});
 
 			// Quickly access the tooltip to update for intersection checking
@@ -6706,9 +6990,9 @@ L.EditToolbar.Edit = L.Handler.extend({
 			this._updateTooltip();
 
 			this._map
-				.on('mousemove', this._onMouseMove, this)
-				.on('touchmove', this._onMouseMove, this)
-				.on('MSPointerMove', this._onMouseMove, this)
+				.on("mousemove", this._onMouseMove, this)
+				.on("touchmove", this._onMouseMove, this)
+				.on("MSPointerMove", this._onMouseMove, this)
 				.on(L.Draw.Event.EDITVERTEX, this._updateTooltip, this);
 		}
 	},
@@ -6727,9 +7011,9 @@ L.EditToolbar.Edit = L.Handler.extend({
 			this._tooltip = null;
 
 			this._map
-				.off('mousemove', this._onMouseMove, this)
-				.off('touchmove', this._onMouseMove, this)
-				.off('MSPointerMove', this._onMouseMove, this)
+				.off("mousemove", this._onMouseMove, this)
+				.off("touchmove", this._onMouseMove, this)
+				.off("MSPointerMove", this._onMouseMove, this)
 				.off(L.Draw.Event.EDITVERTEX, this._updateTooltip, this);
 		}
 	},
@@ -6751,8 +7035,11 @@ L.EditToolbar.Edit = L.Handler.extend({
 				editedLayers.addLayer(layer);
 				layer.edited = false;
 			}
+			if (layer.optionsClone) {
+				layer.cloneOptions();
+			}
 		});
-		this._map.fire(L.Draw.Event.EDITED, {layers: editedLayers});
+		this._map.fire(L.Draw.Event.EDITED, { layers: editedLayers });
 	},
 
 	_backupLayer: function (layer) {
@@ -6760,28 +7047,33 @@ L.EditToolbar.Edit = L.Handler.extend({
 
 		if (!this._uneditedLayerProps[id]) {
 			// Polyline, Polygon or Rectangle
-			if (layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+			if (
+				layer instanceof L.Polyline ||
+				layer instanceof L.Polygon ||
+				layer instanceof L.Rectangle
+			) {
 				this._uneditedLayerProps[id] = {
-					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs())
+					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs()),
 				};
 			} else if (layer instanceof L.Circle) {
 				this._uneditedLayerProps[id] = {
 					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng()),
-					radius: layer.getRadius()
+					radius: layer.getRadius(),
 				};
-			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) { // Marker
+			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+				// Marker
 				this._uneditedLayerProps[id] = {
-					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng())
+					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng()),
 				};
 			}
 		}
 	},
 
 	_getTooltipText: function () {
-		return ({
+		return {
 			text: L.drawLocal.edit.handlers.edit.tooltip.text,
-			subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext
-		});
+			subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext,
+		};
 	},
 
 	_updateTooltip: function () {
@@ -6793,22 +7085,31 @@ L.EditToolbar.Edit = L.Handler.extend({
 		layer.edited = false;
 		if (this._uneditedLayerProps.hasOwnProperty(id)) {
 			// Polyline, Polygon or Rectangle
-			if (layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+			if (
+				layer instanceof L.Polyline ||
+				layer instanceof L.Polygon ||
+				layer instanceof L.Rectangle
+			) {
 				layer.setLatLngs(this._uneditedLayerProps[id].latlngs);
 			} else if (layer instanceof L.Circle) {
 				layer.setLatLng(this._uneditedLayerProps[id].latlng);
 				layer.setRadius(this._uneditedLayerProps[id].radius);
-			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) { // Marker or CircleMarker
+			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+				// Marker or CircleMarker
 				layer.setLatLng(this._uneditedLayerProps[id].latlng);
 			}
-
-			layer.fire('revert-edited', {layer: layer});
+			// Revert Options
+			if (layer.optionsClone) {
+				L.setOptions(layer, layer.optionsClone);
+			}
+			layer.fire("revert-edited", { layer: layer });
 		}
 	},
 
 	_enableLayerEdit: function (e) {
 		var layer = e.layer || e.target || e,
-			pathOptions, poly;
+			pathOptions,
+			poly;
 
 		// Back up this layer (if haven't before)
 		this._backupLayer(layer);
@@ -6830,7 +7131,6 @@ L.EditToolbar.Edit = L.Handler.extend({
 
 			layer.options.original = L.extend({}, layer.options);
 			layer.options.editing = pathOptions;
-
 		}
 
 		if (layer instanceof L.Marker) {
@@ -6839,12 +7139,12 @@ L.EditToolbar.Edit = L.Handler.extend({
 			}
 			layer.dragging.enable();
 			layer
-				.on('dragend', this._onMarkerDragEnd)
+				.on("dragend", this._onMarkerDragEnd)
 				// #TODO: remove when leaflet finally fixes their draggable so it's touch friendly again.
-				.on('touchmove', this._onTouchMove, this)
-				.on('MSPointerMove', this._onTouchMove, this)
-				.on('touchend', this._onMarkerDragEnd, this)
-				.on('MSPointerUp', this._onMarkerDragEnd, this);
+				.on("touchmove", this._onTouchMove, this)
+				.on("MSPointerMove", this._onTouchMove, this)
+				.on("touchend", this._onMarkerDragEnd, this)
+				.on("MSPointerUp", this._onMarkerDragEnd, this);
 		} else {
 			layer.editing.enable();
 		}
@@ -6875,11 +7175,11 @@ L.EditToolbar.Edit = L.Handler.extend({
 		if (layer instanceof L.Marker) {
 			layer.dragging.disable();
 			layer
-				.off('dragend', this._onMarkerDragEnd, this)
-				.off('touchmove', this._onTouchMove, this)
-				.off('MSPointerMove', this._onTouchMove, this)
-				.off('touchend', this._onMarkerDragEnd, this)
-				.off('MSPointerUp', this._onMarkerDragEnd, this);
+				.off("dragend", this._onMarkerDragEnd, this)
+				.off("touchmove", this._onTouchMove, this)
+				.off("MSPointerMove", this._onTouchMove, this)
+				.off("touchend", this._onMarkerDragEnd, this)
+				.off("MSPointerUp", this._onMarkerDragEnd, this);
 		} else {
 			layer.editing.disable();
 		}
@@ -6892,7 +7192,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 	_onMarkerDragEnd: function (e) {
 		var layer = e.target;
 		layer.edited = true;
-		this._map.fire(L.Draw.Event.EDITMOVE, {layer: layer});
+		this._map.fire(L.Draw.Event.EDITMOVE, { layer: layer });
 	},
 
 	_onTouchMove: function (e) {
@@ -6904,7 +7204,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 
 	_hasAvailableLayers: function () {
 		return this._featureGroup.getLayers().length !== 0;
-	}
+	},
 });
 
 
