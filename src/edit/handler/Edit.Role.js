@@ -41,9 +41,10 @@ L.Edit.Role = L.Edit.SimpleShape.extend({
 	_rotate: function (latlng) {
 		this._shape.rotate(latlng);
 		this._updateMarkers();
+		this._map.fire(L.Draw.Event.EDITROTATE, { layer: this._shape });
 	},
 
-	_updateMarkers: function() {
+	_updateMarkers: function () {
 		this._resizeMarkers[0].setLatLng(this._shape.getLatLngs()[0]);
 		this._rotateMarker.setLatLng(this._shape.getRotateMarker());
 	},

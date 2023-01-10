@@ -70,7 +70,6 @@ L.MayBienAp = L.Path.extend({
 
 	initialize: function (latlng, options) {
 		L.setOptions(this, options);
-		this.cloneOptions();
 		this._latlng = L.latLng(latlng);
 	},
 
@@ -285,6 +284,7 @@ L.MayBienAp = L.Path.extend({
 			)
 		);
 	},
+
 	rotate: function (latlng) {
 		const map = this._map;
 		const centerPoint = this._latlng;
@@ -292,6 +292,7 @@ L.MayBienAp = L.Path.extend({
 		this.options.gocXoay = angle;
 		this.redraw();
 	},
+
 	resize: function (latlng) {
 		const map = this._map;
 		const pC = this._getLatLngC();
@@ -304,15 +305,10 @@ L.MayBienAp = L.Path.extend({
 		this.options.chieuDai = Math.abs(2 * d);
 		this.redraw();
 	},
+
 	move: function (latlng) {
 		this._latlng = latlng;
 		this.redraw();
-	},
-	cloneOptions: function () {
-		this.optionsClone = {
-			gocXoay: this.options.gocXoay,
-			chieuDai: this.options.chieuDai,
-		};
 	},
 });
 
@@ -343,7 +339,6 @@ L.ThanhCai = L.Polyline.extend({
 	},
 	initialize: function (centerPoint, options) {
 		L.setOptions(this, options);
-		this.cloneOptions();
 		const latlngs = this._thanhCaiLatLngs(centerPoint);
 		L.Polyline.prototype.initialize.call(this, latlngs, options);
 	},
@@ -393,12 +388,6 @@ L.ThanhCai = L.Polyline.extend({
 	move: function (latlng) {
 		this.setLatLngs(this._thanhCaiLatLngs(latlng));
 	},
-	cloneOptions: function () {
-		this.optionsClone = {
-			gocXoay: this.options.gocXoay,
-			chieuDai: this.options.chieuDai,
-		};
-	},
 });
 
 L.thanhCai = function (latlng, map, options) {
@@ -415,7 +404,6 @@ L.Role = L.Polyline.extend({
 	},
 	initialize: function (centerPoint, options) {
 		L.setOptions(this, options);
-		this.cloneOptions();
 		const latlngs = this._roleLatLngs(centerPoint);
 		L.Polyline.prototype.initialize.call(this, latlngs, options);
 	},
@@ -502,13 +490,6 @@ L.Role = L.Polyline.extend({
 		const angle = L.GeometryUtil.angle(map, centerPoint, latlng);
 		this.options.gocXoay = angle;
 		this.setLatLngs(this._roleLatLngs(centerPoint));
-	},
-	cloneOptions: function () {
-		this.optionsClone = {
-			chieuDai: this.options.chieuDai,
-			chieuRong: this.options.chieuRong,
-			gocXoay: this.options.gocXoay,
-		};
 	},
 });
 

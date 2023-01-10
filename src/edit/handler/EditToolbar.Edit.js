@@ -130,38 +130,56 @@ L.EditToolbar.Edit = L.Handler.extend({
 		var editedLayers = new L.LayerGroup();
 		this._featureGroup.eachLayer(function (layer) {
 			if (layer.edited) {
+				var options = layer.options;
+				if (layer instanceof L.Role) {
+					options.original.chieuDai = options.chieuDai;
+					options.original.chieuRong = options.chieuRong;
+					options.original.gocXoay = options.gocXoay;
+				} else if (layer instanceof L.ThanhCai) {
+					options.original.chieuDai = options.chieuDai;
+					options.original.gocXoay = options.gocXoay;
+				} else if (layer instanceof L.MayBienAp) {
+					options.original.chieuDai = options.chieuDai;
+					options.original.gocXoay = options.gocXoay;
+				}
 				editedLayers.addLayer(layer);
 				layer.edited = false;
 			}
-			if (layer.optionsClone) {
-				layer.cloneOptions();
-			}
 		});
-		this._map.fire(L.Draw.Event.EDITED, { layers: editedLayers });
+		this._map.fire(L.Draw.Event.EDITED, {
+			layers: editedLayers,
+		});
 	},
 
 	_backupLayer: function (layer) {
-		var id = L.Util.stamp(layer);
-
+		const id = L.Util.stamp(layer);
 		if (!this._uneditedLayerProps[id]) {
-			// Polyline, Polygon or Rectangle
-			if (
-				layer instanceof L.Polyline ||
-				layer instanceof L.Polygon ||
-				layer instanceof L.Rectangle
-			) {
+			const options = layer.options;
+			if (layer instanceof L.Role) {
 				this._uneditedLayerProps[id] = {
 					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs()),
+					options: {
+						chieuDai: options.chieuDai,
+						chieuRong: options.chieuRong,
+						gocXoay: options.gocXoay,
+					},
 				};
-			} else if (layer instanceof L.Circle) {
+			} else if (layer instanceof L.ThanhCai) {
 				this._uneditedLayerProps[id] = {
-					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng()),
-					radius: layer.getRadius(),
+					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs()),
+					options: {
+						chieuDai: options.chieuDai,
+						gocXoay: options.gocXoay,
+					},
 				};
-			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-				// Marker
+			} else if (layer instanceof L.MayBienAp) {
+				const latLng = layer.getLatLng();
 				this._uneditedLayerProps[id] = {
-					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng()),
+					latlng: L.latLng(latLng.lat, latLng.lng),
+					options: {
+						chieuDai: options.chieuDai,
+						gocXoay: options.gocXoay,
+					},
 				};
 			}
 		}
@@ -179,26 +197,14 @@ L.EditToolbar.Edit = L.Handler.extend({
 	},
 
 	_revertLayer: function (layer) {
-		var id = L.Util.stamp(layer);
+		const id = L.Util.stamp(layer);
 		layer.edited = false;
 		if (this._uneditedLayerProps.hasOwnProperty(id)) {
-			// Polyline, Polygon or Rectangle
-			if (
-				layer instanceof L.Polyline ||
-				layer instanceof L.Polygon ||
-				layer instanceof L.Rectangle
-			) {
+			L.setOptions(layer, this._uneditedLayerProps[id].options);
+			if (layer instanceof L.Role || layer instanceof L.ThanhCai) {
 				layer.setLatLngs(this._uneditedLayerProps[id].latlngs);
-			} else if (layer instanceof L.Circle) {
+			} else if (layer instanceof L.MayBienAp) {
 				layer.setLatLng(this._uneditedLayerProps[id].latlng);
-				layer.setRadius(this._uneditedLayerProps[id].radius);
-			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-				// Marker or CircleMarker
-				layer.setLatLng(this._uneditedLayerProps[id].latlng);
-			}
-			// Revert Options
-			if (layer.optionsClone) {
-				L.setOptions(layer, layer.optionsClone);
 			}
 			layer.fire("revert-edited", { layer: layer });
 		}
@@ -226,7 +232,6 @@ L.EditToolbar.Edit = L.Handler.extend({
 				pathOptions.color = layer.options.color;
 				pathOptions.fillColor = layer.options.fillColor;
 			}
-
 			layer.options.original = L.extend({}, layer.options);
 			layer.options.editing = pathOptions;
 		}

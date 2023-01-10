@@ -66,7 +66,16 @@
                 poly: {
                     allowIntersection: false
                 },
-                edit: true,
+                edit: {
+                    selectedPathOptions: {
+                        dashArray: '10, 10',
+                        fill: false,
+                        fillColor: '#fe57a1',
+                        fillOpacity: 0.1,
+                        // Whether to user the existing layers color
+                        maintainColor: false,
+                    },
+                },
                 remove: true,
             },
             draw: {
@@ -83,7 +92,11 @@
             drawnItems.addLayer(layer);
         });
 
-        const thanhCai = L.thanhCai(L.latLng(0, 0)).addTo(map);
+        map.on(L.Draw.Event.EDITED, function (e) {
+            console.log(e);
+        });
+
+        // const thanhCai = L.thanhCai(L.latLng(0, 0)).addTo(map);
 
     </script>
 </body>

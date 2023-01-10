@@ -30,7 +30,7 @@ L.EditToolbar = L.Toolbar.extend({
 	},
 
 	// @method intialize(): void
-	initialize: function (options) {
+	initialize: function (options, drawItems) {
 		// Need to set this manually since null is an acceptable value here
 		if (options.edit) {
 			if (typeof options.edit.selectedPathOptions === "undefined") {

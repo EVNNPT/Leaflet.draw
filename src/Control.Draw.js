@@ -3,19 +3,20 @@
  * @aka L.Draw
  */
 L.Control.Draw = L.Control.extend({
-
 	// Options
 	options: {
-		position: 'topleft',
+		position: "topleft",
 		draw: {},
-		edit: false
+		edit: false,
 	},
 
 	// @method initialize(): void
 	// Initializes draw control, toolbars from the options
 	initialize: function (options) {
-		if (L.version < '0.7') {
-			throw new Error('Leaflet.draw 0.2.3+ requires Leaflet 0.7.0+. Download latest from https://github.com/Leaflet/Leaflet/');
+		if (L.version < "0.7") {
+			throw new Error(
+				"Leaflet.draw 0.2.3+ requires Leaflet 0.7.0+. Download latest from https://github.com/Leaflet/Leaflet/"
+			);
 		}
 
 		L.Control.prototype.initialize.call(this, options);
@@ -31,7 +32,11 @@ L.Control.Draw = L.Control.extend({
 			this._toolbars[L.DrawToolbar.TYPE] = toolbar;
 
 			// Listen for when toolbar is enabled
-			this._toolbars[L.DrawToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+			this._toolbars[L.DrawToolbar.TYPE].on(
+				"enable",
+				this._toolbarEnabled,
+				this
+			);
 		}
 
 		if (L.EditToolbar && this.options.edit) {
@@ -40,7 +45,11 @@ L.Control.Draw = L.Control.extend({
 			this._toolbars[L.EditToolbar.TYPE] = toolbar;
 
 			// Listen for when toolbar is enabled
-			this._toolbars[L.EditToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+			this._toolbars[L.EditToolbar.TYPE].on(
+				"enable",
+				this._toolbarEnabled,
+				this
+			);
 		}
 		L.toolbar = this; //set global var for editing the toolbar
 	},
@@ -48,9 +57,9 @@ L.Control.Draw = L.Control.extend({
 	// @method onAdd(): container
 	// Adds the toolbar container to the map
 	onAdd: function (map) {
-		var container = L.DomUtil.create('div', 'leaflet-draw'),
+		var container = L.DomUtil.create("div", "leaflet-draw"),
 			addedTopClass = false,
-			topClassName = 'leaflet-draw-toolbar-top',
+			topClassName = "leaflet-draw-toolbar-top",
 			toolbarContainer;
 
 		for (var toolbarId in this._toolbars) {
@@ -102,12 +111,12 @@ L.Control.Draw = L.Control.extend({
 				this._toolbars[toolbarId].disable();
 			}
 		}
-	}
+	},
 });
 
 L.Map.mergeOptions({
 	drawControlTooltips: true,
-	drawControl: false
+	drawControl: false,
 });
 
 L.Map.addInitHook(function () {

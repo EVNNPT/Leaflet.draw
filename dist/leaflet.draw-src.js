@@ -1,5 +1,5 @@
 /*
- Leaflet.draw 1.0.4+f4c07a8, a plugin that adds drawing and editing tools to Leaflet powered maps.
+ Leaflet.draw 1.0.4+55b0f2c, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
 
  https://github.com/Leaflet/Leaflet.draw
@@ -77,7 +77,6 @@ L.MayBienAp = L.Path.extend({
 
 	initialize: function (latlng, options) {
 		L.setOptions(this, options);
-		this.cloneOptions();
 		this._latlng = L.latLng(latlng);
 	},
 
@@ -315,12 +314,6 @@ L.MayBienAp = L.Path.extend({
 		this._latlng = latlng;
 		this.redraw();
 	},
-	cloneOptions: function () {
-		this.optionsClone = {
-			gocXoay: this.options.gocXoay,
-			chieuDai: this.options.chieuDai,
-		};
-	},
 });
 
 L.mayBienAp = function (latlng, options) {
@@ -350,7 +343,6 @@ L.ThanhCai = L.Polyline.extend({
 	},
 	initialize: function (centerPoint, options) {
 		L.setOptions(this, options);
-		this.cloneOptions();
 		const latlngs = this._thanhCaiLatLngs(centerPoint);
 		L.Polyline.prototype.initialize.call(this, latlngs, options);
 	},
@@ -400,12 +392,6 @@ L.ThanhCai = L.Polyline.extend({
 	move: function (latlng) {
 		this.setLatLngs(this._thanhCaiLatLngs(latlng));
 	},
-	cloneOptions: function () {
-		this.optionsClone = {
-			gocXoay: this.options.gocXoay,
-			chieuDai: this.options.chieuDai,
-		};
-	},
 });
 
 L.thanhCai = function (latlng, map, options) {
@@ -422,7 +408,6 @@ L.Role = L.Polyline.extend({
 	},
 	initialize: function (centerPoint, options) {
 		L.setOptions(this, options);
-		this.cloneOptions();
 		const latlngs = this._roleLatLngs(centerPoint);
 		L.Polyline.prototype.initialize.call(this, latlngs, options);
 	},
@@ -509,13 +494,6 @@ L.Role = L.Polyline.extend({
 		const angle = L.GeometryUtil.angle(map, centerPoint, latlng);
 		this.options.gocXoay = angle;
 		this.setLatLngs(this._roleLatLngs(centerPoint));
-	},
-	cloneOptions: function () {
-		this.optionsClone = {
-			chieuDai: this.options.chieuDai,
-			chieuRong: this.options.chieuRong,
-			gocXoay: this.options.gocXoay,
-		};
 	},
 });
 
@@ -778,7 +756,7 @@ L.Draw.Event = {};
  * Triggered when a new vector or marker has been created.
  *
  */
-L.Draw.Event.CREATED = 'draw:created';
+L.Draw.Event.CREATED = "draw:created";
 
 /**
  * @event draw:edited: LayerGroup
@@ -791,14 +769,14 @@ L.Draw.Event.CREATED = 'draw:created';
  * @example
  * ```js
  *      map.on('draw:edited', function (e) {
-     *          var layers = e.layers;
-     *          layers.eachLayer(function (layer) {
-     *              //do whatever you want; most likely save back to db
-     *          });
-     *      });
+ *          var layers = e.layers;
+ *          layers.eachLayer(function (layer) {
+ *              //do whatever you want; most likely save back to db
+ *          });
+ *      });
  * ```
  */
-L.Draw.Event.EDITED = 'draw:edited';
+L.Draw.Event.EDITED = "draw:edited";
 
 /**
  * @event draw:deleted: LayerGroup
@@ -807,7 +785,7 @@ L.Draw.Event.EDITED = 'draw:edited';
  *
  * Triggered when layers have been removed (and saved) from the FeatureGroup.
  */
-L.Draw.Event.DELETED = 'draw:deleted';
+L.Draw.Event.DELETED = "draw:deleted";
 
 /**
  * @event draw:drawstart: String
@@ -816,7 +794,7 @@ L.Draw.Event.DELETED = 'draw:deleted';
  *
  * Triggered when the user has chosen to draw a particular vector or marker.
  */
-L.Draw.Event.DRAWSTART = 'draw:drawstart';
+L.Draw.Event.DRAWSTART = "draw:drawstart";
 
 /**
  * @event draw:drawstop: String
@@ -826,7 +804,7 @@ L.Draw.Event.DRAWSTART = 'draw:drawstart';
  * Triggered when the user has finished a particular vector or marker.
  */
 
-L.Draw.Event.DRAWSTOP = 'draw:drawstop';
+L.Draw.Event.DRAWSTOP = "draw:drawstop";
 
 /**
  * @event draw:drawvertex: LayerGroup
@@ -835,7 +813,7 @@ L.Draw.Event.DRAWSTOP = 'draw:drawstop';
  *
  * Triggered when a vertex is created on a polyline or polygon.
  */
-L.Draw.Event.DRAWVERTEX = 'draw:drawvertex';
+L.Draw.Event.DRAWVERTEX = "draw:drawvertex";
 
 /**
  * @event draw:editstart: String
@@ -845,7 +823,7 @@ L.Draw.Event.DRAWVERTEX = 'draw:drawvertex';
  * Triggered when the user starts edit mode by clicking the edit tool button.
  */
 
-L.Draw.Event.EDITSTART = 'draw:editstart';
+L.Draw.Event.EDITSTART = "draw:editstart";
 
 /**
  * @event draw:editmove: ILayer
@@ -854,7 +832,7 @@ L.Draw.Event.EDITSTART = 'draw:editstart';
  *
  * Triggered as the user moves a rectangle; circle or marker.
  */
-L.Draw.Event.EDITMOVE = 'draw:editmove';
+L.Draw.Event.EDITMOVE = "draw:editmove";
 
 /**
  * @event draw:editresize: ILayer
@@ -863,7 +841,16 @@ L.Draw.Event.EDITMOVE = 'draw:editmove';
  *
  * Triggered as the user resizes a rectangle or circle.
  */
-L.Draw.Event.EDITRESIZE = 'draw:editresize';
+L.Draw.Event.EDITRESIZE = "draw:editresize";
+
+/**
+ * @event draw:editrotate: ILayer
+ *
+ * Layer that was just moved.
+ *
+ * Triggered as the user rotate a object.
+ */
+L.Draw.Event.EDITROTATE = "draw:editrotate";
 
 /**
  * @event draw:editvertex: LayerGroup
@@ -872,7 +859,7 @@ L.Draw.Event.EDITRESIZE = 'draw:editresize';
  *
  * Triggered when a vertex is edited on a polyline or polygon.
  */
-L.Draw.Event.EDITVERTEX = 'draw:editvertex';
+L.Draw.Event.EDITVERTEX = "draw:editvertex";
 
 /**
  * @event draw:editstop: String
@@ -881,7 +868,7 @@ L.Draw.Event.EDITVERTEX = 'draw:editvertex';
  *
  * Triggered when the user has finshed editing (edit mode) and saves edits.
  */
-L.Draw.Event.EDITSTOP = 'draw:editstop';
+L.Draw.Event.EDITSTOP = "draw:editstop";
 
 /**
  * @event draw:deletestart: String
@@ -890,7 +877,7 @@ L.Draw.Event.EDITSTOP = 'draw:editstop';
  *
  * Triggered when the user starts remove mode by clicking the remove tool button.
  */
-L.Draw.Event.DELETESTART = 'draw:deletestart';
+L.Draw.Event.DELETESTART = "draw:deletestart";
 
 /**
  * @event draw:deletestop: String
@@ -899,28 +886,29 @@ L.Draw.Event.DELETESTART = 'draw:deletestart';
  *
  * Triggered when the user has finished removing shapes (remove mode) and saves.
  */
-L.Draw.Event.DELETESTOP = 'draw:deletestop';
+L.Draw.Event.DELETESTOP = "draw:deletestop";
 
 /**
  * @event draw:toolbaropened: String
  *
  * Triggered when a toolbar is opened.
  */
-L.Draw.Event.TOOLBAROPENED = 'draw:toolbaropened';
+L.Draw.Event.TOOLBAROPENED = "draw:toolbaropened";
 
 /**
  * @event draw:toolbarclosed: String
  *
  * Triggered when a toolbar is closed.
  */
-L.Draw.Event.TOOLBARCLOSED = 'draw:toolbarclosed';
+L.Draw.Event.TOOLBARCLOSED = "draw:toolbarclosed";
 
 /**
  * @event draw:markercontext: String
  *
  * Triggered when a marker is right clicked.
  */
-L.Draw.Event.MARKERCONTEXT = 'draw:markercontext';
+L.Draw.Event.MARKERCONTEXT = "draw:markercontext";
+
 
 
 L.Draw = L.Draw || {};
@@ -4556,9 +4544,10 @@ L.Edit.Role = L.Edit.SimpleShape.extend({
 	_rotate: function (latlng) {
 		this._shape.rotate(latlng);
 		this._updateMarkers();
+		this._map.fire(L.Draw.Event.EDITROTATE, { layer: this._shape });
 	},
 
-	_updateMarkers: function() {
+	_updateMarkers: function () {
 		this._resizeMarkers[0].setLatLng(this._shape.getLatLngs()[0]);
 		this._rotateMarker.setLatLng(this._shape.getRotateMarker());
 	},
@@ -5993,19 +5982,20 @@ L.Polygon.include({
  * @aka L.Draw
  */
 L.Control.Draw = L.Control.extend({
-
 	// Options
 	options: {
-		position: 'topleft',
+		position: "topleft",
 		draw: {},
-		edit: false
+		edit: false,
 	},
 
 	// @method initialize(): void
 	// Initializes draw control, toolbars from the options
 	initialize: function (options) {
-		if (L.version < '0.7') {
-			throw new Error('Leaflet.draw 0.2.3+ requires Leaflet 0.7.0+. Download latest from https://github.com/Leaflet/Leaflet/');
+		if (L.version < "0.7") {
+			throw new Error(
+				"Leaflet.draw 0.2.3+ requires Leaflet 0.7.0+. Download latest from https://github.com/Leaflet/Leaflet/"
+			);
 		}
 
 		L.Control.prototype.initialize.call(this, options);
@@ -6021,7 +6011,11 @@ L.Control.Draw = L.Control.extend({
 			this._toolbars[L.DrawToolbar.TYPE] = toolbar;
 
 			// Listen for when toolbar is enabled
-			this._toolbars[L.DrawToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+			this._toolbars[L.DrawToolbar.TYPE].on(
+				"enable",
+				this._toolbarEnabled,
+				this
+			);
 		}
 
 		if (L.EditToolbar && this.options.edit) {
@@ -6030,7 +6024,11 @@ L.Control.Draw = L.Control.extend({
 			this._toolbars[L.EditToolbar.TYPE] = toolbar;
 
 			// Listen for when toolbar is enabled
-			this._toolbars[L.EditToolbar.TYPE].on('enable', this._toolbarEnabled, this);
+			this._toolbars[L.EditToolbar.TYPE].on(
+				"enable",
+				this._toolbarEnabled,
+				this
+			);
 		}
 		L.toolbar = this; //set global var for editing the toolbar
 	},
@@ -6038,9 +6036,9 @@ L.Control.Draw = L.Control.extend({
 	// @method onAdd(): container
 	// Adds the toolbar container to the map
 	onAdd: function (map) {
-		var container = L.DomUtil.create('div', 'leaflet-draw'),
+		var container = L.DomUtil.create("div", "leaflet-draw"),
 			addedTopClass = false,
-			topClassName = 'leaflet-draw-toolbar-top',
+			topClassName = "leaflet-draw-toolbar-top",
 			toolbarContainer;
 
 		for (var toolbarId in this._toolbars) {
@@ -6092,12 +6090,12 @@ L.Control.Draw = L.Control.extend({
 				this._toolbars[toolbarId].disable();
 			}
 		}
-	}
+	},
 });
 
 L.Map.mergeOptions({
 	drawControlTooltips: true,
-	drawControl: false
+	drawControl: false,
 });
 
 L.Map.addInitHook(function () {
@@ -6166,7 +6164,7 @@ L.Toolbar = L.Class.extend({
 		this._actionButtons = [];
 		this._activeMode = null;
 
-		var version = L.version.split('.');
+		var version = L.version.split(".");
 		//If Version is >= 1.2.0
 		if (parseInt(version[0], 10) === 1 && parseInt(version[1], 10) >= 2) {
 			L.Toolbar.include(L.Evented.prototype);
@@ -6194,13 +6192,16 @@ L.Toolbar = L.Class.extend({
 	// @method addToolbar(map): L.DomUtil
 	// Adds the toolbar to the map and returns the toolbar dom element
 	addToolbar: function (map) {
-		var container = L.DomUtil.create('div', 'leaflet-draw-section'),
+		var container = L.DomUtil.create("div", "leaflet-draw-section"),
 			buttonIndex = 0,
-			buttonClassPrefix = this._toolbarClass || '',
+			buttonClassPrefix = this._toolbarClass || "",
 			modeHandlers = this.getModeHandlers(map),
 			i;
 
-		this._toolbarContainer = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
+		this._toolbarContainer = L.DomUtil.create(
+			"div",
+			"leaflet-draw-toolbar leaflet-bar"
+		);
 		this._map = map;
 
 		for (i = 0; i < modeHandlers.length; i++) {
@@ -6224,7 +6225,7 @@ L.Toolbar = L.Class.extend({
 		this._lastButtonIndex = --buttonIndex;
 
 		// Create empty actions part of the toolbar
-		this._actionsContainer = L.DomUtil.create('ul', 'leaflet-draw-actions');
+		this._actionsContainer = L.DomUtil.create("ul", "leaflet-draw-actions");
 
 		// Add draw and cancel containers to the control container
 		container.appendChild(this._toolbarContainer);
@@ -6251,8 +6252,8 @@ L.Toolbar = L.Class.extend({
 
 				// Unbind handler
 				this._modes[handlerId].handler
-					.off('enabled', this._handlerActivated, this)
-					.off('disabled', this._handlerDeactivated, this);
+					.off("enabled", this._handlerActivated, this)
+					.off("disabled", this._handlerDeactivated, this);
 			}
 		}
 		this._modes = {};
@@ -6269,7 +6270,13 @@ L.Toolbar = L.Class.extend({
 		this._actionsContainer = null;
 	},
 
-	_initModeHandler: function (handler, container, buttonIndex, classNamePredix, buttonTitle) {
+	_initModeHandler: function (
+		handler,
+		container,
+		buttonIndex,
+		classNamePredix,
+		buttonTitle
+	) {
 		var type = handler.type;
 
 		this._modes[type] = {};
@@ -6279,33 +6286,36 @@ L.Toolbar = L.Class.extend({
 		this._modes[type].button = this._createButton({
 			type: type,
 			title: buttonTitle,
-			className: classNamePredix + '-' + type,
+			className: classNamePredix + "-" + type,
 			container: container,
 			callback: this._modes[type].handler.enable,
-			context: this._modes[type].handler
+			context: this._modes[type].handler,
 		});
 
 		this._modes[type].buttonIndex = buttonIndex;
 
 		this._modes[type].handler
-			.on('enabled', this._handlerActivated, this)
-			.on('disabled', this._handlerDeactivated, this);
+			.on("enabled", this._handlerActivated, this)
+			.on("disabled", this._handlerDeactivated, this);
 	},
 
 	/* Detect iOS based on browser User Agent, based on:
 	 * http://stackoverflow.com/a/9039885 */
 	_detectIOS: function () {
-		var iOS = (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
+		var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 		return iOS;
 	},
 
 	_createButton: function (options) {
-
-		var link = L.DomUtil.create('a', options.className || '', options.container);
+		var link = L.DomUtil.create(
+			"a",
+			options.className || "",
+			options.container
+		);
 		// Screen reader tag
-		var sr = L.DomUtil.create('span', 'sr-only', options.container);
+		var sr = L.DomUtil.create("span", "sr-only", options.container);
 
-		link.href = '#';
+		link.href = "#";
 		link.appendChild(sr);
 
 		if (options.title) {
@@ -6319,14 +6329,13 @@ L.Toolbar = L.Class.extend({
 		}
 
 		/* iOS does not use click events */
-		var buttonEvent = this._detectIOS() ? 'touchstart' : 'click';
+		var buttonEvent = this._detectIOS() ? "touchstart" : "click";
 
-		L.DomEvent
-			.on(link, 'click', L.DomEvent.stopPropagation)
-			.on(link, 'mousedown', L.DomEvent.stopPropagation)
-			.on(link, 'dblclick', L.DomEvent.stopPropagation)
-			.on(link, 'touchstart', L.DomEvent.stopPropagation)
-			.on(link, 'click', L.DomEvent.preventDefault)
+		L.DomEvent.on(link, "click", L.DomEvent.stopPropagation)
+			.on(link, "mousedown", L.DomEvent.stopPropagation)
+			.on(link, "dblclick", L.DomEvent.stopPropagation)
+			.on(link, "touchstart", L.DomEvent.stopPropagation)
+			.on(link, "click", L.DomEvent.preventDefault)
 			.on(link, buttonEvent, options.callback, options.context);
 
 		return link;
@@ -6334,14 +6343,13 @@ L.Toolbar = L.Class.extend({
 
 	_disposeButton: function (button, callback) {
 		/* iOS does not use click events */
-		var buttonEvent = this._detectIOS() ? 'touchstart' : 'click';
+		var buttonEvent = this._detectIOS() ? "touchstart" : "click";
 
-		L.DomEvent
-			.off(button, 'click', L.DomEvent.stopPropagation)
-			.off(button, 'mousedown', L.DomEvent.stopPropagation)
-			.off(button, 'dblclick', L.DomEvent.stopPropagation)
-			.off(button, 'touchstart', L.DomEvent.stopPropagation)
-			.off(button, 'click', L.DomEvent.preventDefault)
+		L.DomEvent.off(button, "click", L.DomEvent.stopPropagation)
+			.off(button, "mousedown", L.DomEvent.stopPropagation)
+			.off(button, "dblclick", L.DomEvent.stopPropagation)
+			.off(button, "touchstart", L.DomEvent.stopPropagation)
+			.off(button, "click", L.DomEvent.preventDefault)
 			.off(button, buttonEvent, callback);
 	},
 
@@ -6352,32 +6360,44 @@ L.Toolbar = L.Class.extend({
 		// Cache new active feature
 		this._activeMode = this._modes[e.handler];
 
-		L.DomUtil.addClass(this._activeMode.button, 'leaflet-draw-toolbar-button-enabled');
+		L.DomUtil.addClass(
+			this._activeMode.button,
+			"leaflet-draw-toolbar-button-enabled"
+		);
 
 		this._showActionsToolbar();
 
-		this.fire('enable');
+		this.fire("enable");
 	},
 
 	_handlerDeactivated: function () {
 		this._hideActionsToolbar();
 
-		L.DomUtil.removeClass(this._activeMode.button, 'leaflet-draw-toolbar-button-enabled');
+		L.DomUtil.removeClass(
+			this._activeMode.button,
+			"leaflet-draw-toolbar-button-enabled"
+		);
 
 		this._activeMode = null;
 
-		this.fire('disable');
+		this.fire("disable");
 	},
 
 	_createActions: function (handler) {
 		var container = this._actionsContainer,
 			buttons = this.getActions(handler),
 			l = buttons.length,
-			li, di, dl, button;
+			li,
+			di,
+			dl,
+			button;
 
 		// Dispose the actions toolbar (todo: dispose only not used buttons)
 		for (di = 0, dl = this._actionButtons.length; di < dl; di++) {
-			this._disposeButton(this._actionButtons[di].button, this._actionButtons[di].callback);
+			this._disposeButton(
+				this._actionButtons[di].button,
+				this._actionButtons[di].callback
+			);
 		}
 		this._actionButtons = [];
 
@@ -6387,23 +6407,23 @@ L.Toolbar = L.Class.extend({
 		}
 
 		for (var i = 0; i < l; i++) {
-			if ('enabled' in buttons[i] && !buttons[i].enabled) {
+			if ("enabled" in buttons[i] && !buttons[i].enabled) {
 				continue;
 			}
 
-			li = L.DomUtil.create('li', '', container);
+			li = L.DomUtil.create("li", "", container);
 
 			button = this._createButton({
 				title: buttons[i].title,
 				text: buttons[i].text,
 				container: li,
 				callback: buttons[i].callback,
-				context: buttons[i].context
+				context: buttons[i].context,
 			});
 
 			this._actionButtons.push({
 				button: button,
-				callback: buttons[i].callback
+				callback: buttons[i].callback,
 			});
 		}
 	},
@@ -6417,31 +6437,40 @@ L.Toolbar = L.Class.extend({
 		this._createActions(this._activeMode.handler);
 
 		// Correctly position the cancel button
-		this._actionsContainer.style.top = toolbarPosition + 'px';
+		this._actionsContainer.style.top = toolbarPosition + "px";
 
 		if (buttonIndex === 0) {
-			L.DomUtil.addClass(this._toolbarContainer, 'leaflet-draw-toolbar-notop');
-			L.DomUtil.addClass(this._actionsContainer, 'leaflet-draw-actions-top');
+			L.DomUtil.addClass(this._toolbarContainer, "leaflet-draw-toolbar-notop");
+			L.DomUtil.addClass(this._actionsContainer, "leaflet-draw-actions-top");
 		}
 
 		if (buttonIndex === lastButtonIndex) {
-			L.DomUtil.addClass(this._toolbarContainer, 'leaflet-draw-toolbar-nobottom');
-			L.DomUtil.addClass(this._actionsContainer, 'leaflet-draw-actions-bottom');
+			L.DomUtil.addClass(
+				this._toolbarContainer,
+				"leaflet-draw-toolbar-nobottom"
+			);
+			L.DomUtil.addClass(this._actionsContainer, "leaflet-draw-actions-bottom");
 		}
 
-		this._actionsContainer.style.display = 'block';
+		this._actionsContainer.style.display = "block";
 		this._map.fire(L.Draw.Event.TOOLBAROPENED);
 	},
 
 	_hideActionsToolbar: function () {
-		this._actionsContainer.style.display = 'none';
+		this._actionsContainer.style.display = "none";
 
-		L.DomUtil.removeClass(this._toolbarContainer, 'leaflet-draw-toolbar-notop');
-		L.DomUtil.removeClass(this._toolbarContainer, 'leaflet-draw-toolbar-nobottom');
-		L.DomUtil.removeClass(this._actionsContainer, 'leaflet-draw-actions-top');
-		L.DomUtil.removeClass(this._actionsContainer, 'leaflet-draw-actions-bottom');
+		L.DomUtil.removeClass(this._toolbarContainer, "leaflet-draw-toolbar-notop");
+		L.DomUtil.removeClass(
+			this._toolbarContainer,
+			"leaflet-draw-toolbar-nobottom"
+		);
+		L.DomUtil.removeClass(this._actionsContainer, "leaflet-draw-actions-top");
+		L.DomUtil.removeClass(
+			this._actionsContainer,
+			"leaflet-draw-actions-bottom"
+		);
 		this._map.fire(L.Draw.Event.TOOLBARCLOSED);
-	}
+	},
 });
 
 
@@ -6735,7 +6764,7 @@ L.EditToolbar = L.Toolbar.extend({
 	},
 
 	// @method intialize(): void
-	initialize: function (options) {
+	initialize: function (options, drawItems) {
 		// Need to set this manually since null is an acceptable value here
 		if (options.edit) {
 			if (typeof options.edit.selectedPathOptions === "undefined") {
@@ -7046,38 +7075,50 @@ L.EditToolbar.Edit = L.Handler.extend({
 		var editedLayers = new L.LayerGroup();
 		this._featureGroup.eachLayer(function (layer) {
 			if (layer.edited) {
+				var options = layer.options;
+				if (layer instanceof L.Role) {
+					console.log("Role");
+					options.original.chieuDai = options.chieuDai;
+					options.original.chieuRong = options.chieuRong;
+					options.original.gocXoay = options.gocXoay;
+				} else if (layer instanceof L.ThanhCai) {
+					console.log("ThanhCai");
+					options.original.chieuDai = options.chieuDai;
+					options.original.gocXoay = options.gocXoay;
+				} else if (layer instanceof L.MayBienAp) {
+					console.log("MayBienAp");
+					options.original.chieuDai = options.chieuDai;
+					options.original.gocXoay = options.gocXoay;
+				}
 				editedLayers.addLayer(layer);
 				layer.edited = false;
 			}
-			if (layer.optionsClone) {
-				layer.cloneOptions();
-			}
 		});
-		this._map.fire(L.Draw.Event.EDITED, { layers: editedLayers });
+		this._map.fire(L.Draw.Event.EDITED, {
+			layers: editedLayers,
+		});
 	},
 
 	_backupLayer: function (layer) {
-		var id = L.Util.stamp(layer);
-
+		const id = L.Util.stamp(layer);
 		if (!this._uneditedLayerProps[id]) {
-			// Polyline, Polygon or Rectangle
-			if (
-				layer instanceof L.Polyline ||
-				layer instanceof L.Polygon ||
-				layer instanceof L.Rectangle
-			) {
+			const options = layer.options;
+			if (layer instanceof L.Role) {
 				this._uneditedLayerProps[id] = {
 					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs()),
+					options: {
+						chieuDai: options.chieuDai,
+						chieuRong: options.chieuRong,
+						gocXoay: options.gocXoay,
+					},
 				};
-			} else if (layer instanceof L.Circle) {
+			} else if (layer instanceof L.ThanhCai) {
 				this._uneditedLayerProps[id] = {
-					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng()),
-					radius: layer.getRadius(),
-				};
-			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-				// Marker
-				this._uneditedLayerProps[id] = {
-					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng()),
+					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs()),
+					options: {
+						chieuDai: options.chieuDai,
+						gocXoay: options.gocXoay,
+					},
 				};
 			}
 		}
@@ -7095,26 +7136,12 @@ L.EditToolbar.Edit = L.Handler.extend({
 	},
 
 	_revertLayer: function (layer) {
-		var id = L.Util.stamp(layer);
+		const id = L.Util.stamp(layer);
 		layer.edited = false;
 		if (this._uneditedLayerProps.hasOwnProperty(id)) {
-			// Polyline, Polygon or Rectangle
-			if (
-				layer instanceof L.Polyline ||
-				layer instanceof L.Polygon ||
-				layer instanceof L.Rectangle
-			) {
+			if (layer instanceof L.Role || layer instanceof L.ThanhCai) {
 				layer.setLatLngs(this._uneditedLayerProps[id].latlngs);
-			} else if (layer instanceof L.Circle) {
-				layer.setLatLng(this._uneditedLayerProps[id].latlng);
-				layer.setRadius(this._uneditedLayerProps[id].radius);
-			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-				// Marker or CircleMarker
-				layer.setLatLng(this._uneditedLayerProps[id].latlng);
-			}
-			// Revert Options
-			if (layer.optionsClone) {
-				L.setOptions(layer, layer.optionsClone);
+				L.setOptions(layer, this._uneditedLayerProps[id].options);
 			}
 			layer.fire("revert-edited", { layer: layer });
 		}
@@ -7142,7 +7169,6 @@ L.EditToolbar.Edit = L.Handler.extend({
 				pathOptions.color = layer.options.color;
 				pathOptions.fillColor = layer.options.fillColor;
 			}
-
 			layer.options.original = L.extend({}, layer.options);
 			layer.options.editing = pathOptions;
 		}
