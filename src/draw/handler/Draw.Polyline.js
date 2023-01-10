@@ -5,7 +5,7 @@
  */
 L.Draw.Polyline = L.Draw.Feature.extend({
 	statics: {
-		TYPE: 'polyline'
+		TYPE: "polyline",
 	},
 
 	Poly: L.Polyline,
@@ -14,26 +14,26 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		allowIntersection: true,
 		repeatMode: false,
 		drawError: {
-			color: '#b00b00',
-			timeout: 2500
+			color: "#b00b00",
+			timeout: 2500,
 		},
 		icon: new L.DivIcon({
 			iconSize: new L.Point(8, 8),
-			className: 'leaflet-div-icon leaflet-editing-icon'
+			className: "leaflet-div-icon leaflet-editing-icon",
 		}),
 		touchIcon: new L.DivIcon({
 			iconSize: new L.Point(20, 20),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-touch-icon'
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-touch-icon",
 		}),
 		guidelineDistance: 20,
 		maxGuideLineLength: 4000,
 		shapeOptions: {
 			stroke: true,
-			color: '#3388ff',
+			color: "#3388ff",
 			weight: 4,
 			opacity: 0.5,
 			fill: false,
-			clickable: true
+			clickable: true,
 		},
 		metric: true, // Whether to use the metric measurement system or imperial
 		feet: true, // When not metric, to use feet instead of yards for display.
@@ -41,7 +41,7 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		showLength: true, // Whether to display distance in the tooltip
 		zIndexOffset: 2000, // This should be > than the highest z-index any map layers
 		factor: 1, // To change distance calculation
-		maxPoints: 0 // Once this number of points are placed, finish shape
+		maxPoints: 0, // Once this number of points are placed, finish shape
 	},
 
 	// @method initialize(): void
@@ -56,7 +56,11 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 		// Merge default drawError options with custom options
 		if (options && options.drawError) {
-			options.drawError = L.Util.extend({}, this.options.drawError, options.drawError);
+			options.drawError = L.Util.extend(
+				{},
+				this.options.drawError,
+				options.drawError
+			);
 		}
 
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
@@ -87,29 +91,28 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			if (!this._mouseMarker) {
 				this._mouseMarker = L.marker(this._map.getCenter(), {
 					icon: L.divIcon({
-						className: 'leaflet-mouse-marker',
+						className: "leaflet-mouse-marker",
 						iconAnchor: [20, 20],
-						iconSize: [40, 40]
+						iconSize: [40, 40],
 					}),
 					opacity: 0,
-					zIndexOffset: this.options.zIndexOffset
+					zIndexOffset: this.options.zIndexOffset,
 				});
 			}
 
 			this._mouseMarker
-				.on('mouseout', this._onMouseOut, this)
-				.on('mousemove', this._onMouseMove, this) // Necessary to prevent 0.8 stutter
-				.on('mousedown', this._onMouseDown, this)
-				.on('mouseup', this._onMouseUp, this) // Necessary for 0.8 compatibility
+				.on("mouseout", this._onMouseOut, this)
+				.on("mousemove", this._onMouseMove, this) // Necessary to prevent 0.8 stutter
+				.on("mousedown", this._onMouseDown, this)
+				.on("mouseup", this._onMouseUp, this) // Necessary for 0.8 compatibility
 				.addTo(this._map);
 
 			this._map
-				.on('mouseup', this._onMouseUp, this) // Necessary for 0.7 compatibility
-				.on('mousemove', this._onMouseMove, this)
-				.on('zoomlevelschange', this._onZoomEnd, this)
-				.on('touchstart', this._onTouch, this)
-				.on('zoomend', this._onZoomEnd, this);
-
+				.on("mouseup", this._onMouseUp, this) // Necessary for 0.7 compatibility
+				.on("mousemove", this._onMouseMove, this)
+				.on("zoomlevelschange", this._onZoomEnd, this)
+				.on("touchstart", this._onTouch, this)
+				.on("zoomend", this._onZoomEnd, this);
 		}
 	},
 
@@ -131,10 +134,10 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		delete this._poly;
 
 		this._mouseMarker
-			.off('mousedown', this._onMouseDown, this)
-			.off('mouseout', this._onMouseOut, this)
-			.off('mouseup', this._onMouseUp, this)
-			.off('mousemove', this._onMouseMove, this);
+			.off("mousedown", this._onMouseDown, this)
+			.off("mouseout", this._onMouseOut, this)
+			.off("mouseup", this._onMouseUp, this)
+			.off("mousemove", this._onMouseMove, this);
 		this._map.removeLayer(this._mouseMarker);
 		delete this._mouseMarker;
 
@@ -142,12 +145,12 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		this._clearGuides();
 
 		this._map
-			.off('mouseup', this._onMouseUp, this)
-			.off('mousemove', this._onMouseMove, this)
-			.off('zoomlevelschange', this._onZoomEnd, this)
-			.off('zoomend', this._onZoomEnd, this)
-			.off('touchstart', this._onTouch, this)
-			.off('click', this._onTouch, this);
+			.off("mouseup", this._onMouseUp, this)
+			.off("mousemove", this._onMouseMove, this)
+			.off("zoomlevelschange", this._onZoomEnd, this)
+			.off("zoomend", this._onZoomEnd, this)
+			.off("touchstart", this._onTouch, this)
+			.off("click", this._onTouch, this);
 	},
 
 	// @method deleteLastVertex(): void
@@ -178,11 +181,14 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	addVertex: function (latlng) {
 		var markersLength = this._markers.length;
 		// markersLength must be greater than or equal to 2 before intersections can occur
-		if (markersLength >= 2 && !this.options.allowIntersection && this._poly.newLatLngIntersects(latlng)) {
+		if (
+			markersLength >= 2 &&
+			!this.options.allowIntersection &&
+			this._poly.newLatLngIntersects(latlng)
+		) {
 			this._showErrorTooltip();
 			return;
-		}
-		else if (this._errorShown) {
+		} else if (this._errorShown) {
 			this._hideErrorTooltip();
 		}
 
@@ -213,10 +219,17 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	},
 
 	_finishShape: function () {
-		var latlngs = this._poly._defaultShape ? this._poly._defaultShape() : this._poly.getLatLngs();
-		var intersects = this._poly.newLatLngIntersects(latlngs[latlngs.length - 1]);
+		var latlngs = this._poly._defaultShape
+			? this._poly._defaultShape()
+			: this._poly.getLatLngs();
+		var intersects = this._poly.newLatLngIntersects(
+			latlngs[latlngs.length - 1]
+		);
 
-		if ((!this.options.allowIntersection && intersects) || !this._shapeIsValid()) {
+		if (
+			(!this.options.allowIntersection && intersects) ||
+			!this._shapeIsValid()
+		) {
 			this._showErrorTooltip();
 			return;
 		}
@@ -260,7 +273,7 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	},
 
 	_vertexChanged: function (latlng, added) {
-		this._map.fire(L.Draw.Event.DRAWVERTEX, {layers: this._markerGroup});
+		this._map.fire(L.Draw.Event.DRAWVERTEX, { layers: this._markerGroup });
 		this._updateFinishHandler();
 
 		this._updateRunningMeasure(latlng, added);
@@ -296,15 +309,22 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 	_endPoint: function (clientX, clientY, e) {
 		if (this._mouseDownOrigin) {
-			var dragCheckDistance = L.point(clientX, clientY)
-				.distanceTo(this._mouseDownOrigin);
+			var dragCheckDistance = L.point(clientX, clientY).distanceTo(
+				this._mouseDownOrigin
+			);
 			var lastPtDistance = this._calculateFinishDistance(e.latlng);
-			if (this.options.maxPoints > 1 && this.options.maxPoints == this._markers.length + 1) {
+			if (
+				this.options.maxPoints > 1 &&
+				this.options.maxPoints == this._markers.length + 1
+			) {
 				this.addVertex(e.latlng);
 				this._finishShape();
 			} else if (lastPtDistance < 10 && L.Browser.touch) {
 				this._finishShape();
-			} else if (Math.abs(dragCheckDistance) < 9 * (window.devicePixelRatio || 1)) {
+			} else if (
+				Math.abs(dragCheckDistance) <
+				9 * (window.devicePixelRatio || 1)
+			) {
 				this.addVertex(e.latlng);
 			}
 			this._enableNewMarkers(); // after a short pause, enable new markers
@@ -318,7 +338,13 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		var originalEvent = e.originalEvent;
 		var clientX;
 		var clientY;
-		if (originalEvent.touches && originalEvent.touches[0] && !this._clickHandled && !this._touchHandled && !this._disableMarkers) {
+		if (
+			originalEvent.touches &&
+			originalEvent.touches[0] &&
+			!this._clickHandled &&
+			!this._touchHandled &&
+			!this._disableMarkers
+		) {
 			clientX = originalEvent.touches[0].clientX;
 			clientY = originalEvent.touches[0].clientY;
 			this._disableNewMarkers();
@@ -351,12 +377,16 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			} else {
 				return Infinity;
 			}
-			var lastMarkerPoint = this._map.latLngToContainerPoint(finishMarker.getLatLng()),
+			var lastMarkerPoint = this._map.latLngToContainerPoint(
+					finishMarker.getLatLng()
+				),
 				potentialMarker = new L.Marker(potentialLatLng, {
 					icon: this.options.icon,
-					zIndexOffset: this.options.zIndexOffset * 2
+					zIndexOffset: this.options.zIndexOffset * 2,
 				});
-			var potentialMarkerPint = this._map.latLngToContainerPoint(potentialMarker.getLatLng());
+			var potentialMarkerPint = this._map.latLngToContainerPoint(
+				potentialMarker.getLatLng()
+			);
 			lastPtDistance = lastMarkerPoint.distanceTo(potentialMarkerPint);
 		} else {
 			lastPtDistance = Infinity;
@@ -368,19 +398,19 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		var markerCount = this._markers.length;
 		// The last marker should have a click handler to close the polyline
 		if (markerCount > 1) {
-			this._markers[markerCount - 1].on('click', this._finishShape, this);
+			this._markers[markerCount - 1].on("click", this._finishShape, this);
 		}
 
 		// Remove the old marker click handler (as only the last point should close the polyline)
 		if (markerCount > 2) {
-			this._markers[markerCount - 2].off('click', this._finishShape, this);
+			this._markers[markerCount - 2].off("click", this._finishShape, this);
 		}
 	},
 
 	_createMarker: function (latlng) {
 		var marker = new L.Marker(latlng, {
 			icon: this.options.icon,
-			zIndexOffset: this.options.zIndexOffset * 2
+			zIndexOffset: this.options.zIndexOffset * 2,
 		});
 
 		this._markerGroup.addLayer(marker);
@@ -397,7 +427,9 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			// draw the guide line
 			this._clearGuides();
 			this._drawGuide(
-				this._map.latLngToLayerPoint(this._markers[markerCount - 1].getLatLng()),
+				this._map.latLngToLayerPoint(
+					this._markers[markerCount - 1].getLatLng()
+				),
 				newPos
 			);
 		}
@@ -416,18 +448,29 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	},
 
 	_drawGuide: function (pointA, pointB) {
-		var length = Math.floor(Math.sqrt(Math.pow((pointB.x - pointA.x), 2) + Math.pow((pointB.y - pointA.y), 2))),
+		var length = Math.floor(
+				Math.sqrt(
+					Math.pow(pointB.x - pointA.x, 2) + Math.pow(pointB.y - pointA.y, 2)
+				)
+			),
 			guidelineDistance = this.options.guidelineDistance,
 			maxGuideLineLength = this.options.maxGuideLineLength,
 			// Only draw a guideline with a max length
-			i = length > maxGuideLineLength ? length - maxGuideLineLength : guidelineDistance,
+			i =
+				length > maxGuideLineLength
+					? length - maxGuideLineLength
+					: guidelineDistance,
 			fraction,
 			dashPoint,
 			dash;
 
 		//create the guides container if we haven't yet
 		if (!this._guidesContainer) {
-			this._guidesContainer = L.DomUtil.create('div', 'leaflet-draw-guides', this._overlayPane);
+			this._guidesContainer = L.DomUtil.create(
+				"div",
+				"leaflet-draw-guides",
+				this._overlayPane
+			);
 		}
 
 		//draw a dash every GuildeLineDistance
@@ -437,14 +480,19 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 			//calculate new x,y point
 			dashPoint = {
-				x: Math.floor((pointA.x * (1 - fraction)) + (fraction * pointB.x)),
-				y: Math.floor((pointA.y * (1 - fraction)) + (fraction * pointB.y))
+				x: Math.floor(pointA.x * (1 - fraction) + fraction * pointB.x),
+				y: Math.floor(pointA.y * (1 - fraction) + fraction * pointB.y),
 			};
 
 			//add guide dash to guide container
-			dash = L.DomUtil.create('div', 'leaflet-draw-guide-dash', this._guidesContainer);
-			dash.style.backgroundColor =
-				!this._errorShown ? this.options.shapeOptions.color : this.options.drawError.color;
+			dash = L.DomUtil.create(
+				"div",
+				"leaflet-draw-guide-dash",
+				this._guidesContainer
+			);
+			dash.style.backgroundColor = !this._errorShown
+				? this.options.shapeOptions.color
+				: this.options.drawError.color;
 
 			L.DomUtil.setPosition(dash, dashPoint);
 		}
@@ -469,23 +517,24 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 	_getTooltipText: function () {
 		var showLength = this.options.showLength,
-			labelText, distanceStr;
+			labelText,
+			distanceStr;
 		if (this._markers.length === 0) {
 			labelText = {
-				text: L.drawLocal.draw.handlers.polyline.tooltip.start
+				text: L.drawLocal.draw.handlers.polyline.tooltip.start,
 			};
 		} else {
-			distanceStr = showLength ? this._getMeasurementString() : '';
+			distanceStr = showLength ? this._getMeasurementString() : "";
 
 			if (this._markers.length === 1) {
 				labelText = {
 					text: L.drawLocal.draw.handlers.polyline.tooltip.cont,
-					subtext: distanceStr
+					subtext: distanceStr,
 				};
 			} else {
 				labelText = {
 					text: L.drawLocal.draw.handlers.polyline.tooltip.end,
-					subtext: distanceStr
+					subtext: distanceStr,
 				};
 			}
 		}
@@ -494,7 +543,8 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 	_updateRunningMeasure: function (latlng, added) {
 		var markersLength = this._markers.length,
-			previousMarkerIndex, distance;
+			previousMarkerIndex,
+			distance;
 
 		if (this._markers.length === 1) {
 			this._measurementRunningTotal = 0;
@@ -503,9 +553,15 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 			// Calculate the distance based on the version
 			if (L.GeometryUtil.isVersion07x()) {
-				distance = latlng.distanceTo(this._markers[previousMarkerIndex].getLatLng()) * (this.options.factor || 1);
+				distance =
+					latlng.distanceTo(this._markers[previousMarkerIndex].getLatLng()) *
+					(this.options.factor || 1);
 			} else {
-				distance = this._map.distance(latlng, this._markers[previousMarkerIndex].getLatLng()) * (this.options.factor || 1);
+				distance =
+					this._map.distance(
+						latlng,
+						this._markers[previousMarkerIndex].getLatLng()
+					) * (this.options.factor || 1);
 			}
 
 			this._measurementRunningTotal += distance * (added ? 1 : -1);
@@ -519,12 +575,28 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 		// Calculate the distance from the last fixed point to the mouse position based on the version
 		if (L.GeometryUtil.isVersion07x()) {
-			distance = previousLatLng && currentLatLng && currentLatLng.distanceTo ? this._measurementRunningTotal + currentLatLng.distanceTo(previousLatLng) * (this.options.factor || 1) : this._measurementRunningTotal || 0;
+			distance =
+				previousLatLng && currentLatLng && currentLatLng.distanceTo
+					? this._measurementRunningTotal +
+					  currentLatLng.distanceTo(previousLatLng) *
+							(this.options.factor || 1)
+					: this._measurementRunningTotal || 0;
 		} else {
-			distance = previousLatLng && currentLatLng ? this._measurementRunningTotal + this._map.distance(currentLatLng, previousLatLng) * (this.options.factor || 1) : this._measurementRunningTotal || 0;
+			distance =
+				previousLatLng && currentLatLng
+					? this._measurementRunningTotal +
+					  this._map.distance(currentLatLng, previousLatLng) *
+							(this.options.factor || 1)
+					: this._measurementRunningTotal || 0;
 		}
 
-		return L.GeometryUtil.readableDistance(distance, this.options.metric, this.options.feet, this.options.nautic, this.options.precision);
+		return L.GeometryUtil.readableDistance(
+			distance,
+			this.options.metric,
+			this.options.feet,
+			this.options.nautic,
+			this.options.precision
+		);
 	},
 
 	_showErrorTooltip: function () {
@@ -533,15 +605,18 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		// Update tooltip
 		this._tooltip
 			.showAsError()
-			.updateContent({text: this.options.drawError.message});
+			.updateContent({ text: this.options.drawError.message });
 
 		// Update shape
 		this._updateGuideColor(this.options.drawError.color);
-		this._poly.setStyle({color: this.options.drawError.color});
+		this._poly.setStyle({ color: this.options.drawError.color });
 
 		// Hide the error after 2 seconds
 		this._clearHideErrorTimeout();
-		this._hideErrorTimeout = setTimeout(L.Util.bind(this._hideErrorTooltip, this), this.options.drawError.timeout);
+		this._hideErrorTimeout = setTimeout(
+			L.Util.bind(this._hideErrorTooltip, this),
+			this.options.drawError.timeout
+		);
 	},
 
 	_hideErrorTooltip: function () {
@@ -550,13 +625,11 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		this._clearHideErrorTimeout();
 
 		// Revert tooltip
-		this._tooltip
-			.removeError()
-			.updateContent(this._getTooltipText());
+		this._tooltip.removeError().updateContent(this._getTooltipText());
 
 		// Revert shape
 		this._updateGuideColor(this.options.shapeOptions.color);
-		this._poly.setStyle({color: this.options.shapeOptions.color});
+		this._poly.setStyle({ color: this.options.shapeOptions.color });
 	},
 
 	_clearHideErrorTimeout: function () {
@@ -574,19 +647,29 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 	// see _disableNewMarkers
 	_enableNewMarkers: function () {
-		setTimeout(function () {
-			this._disableMarkers = false;
-		}.bind(this), 50);
+		setTimeout(
+			function () {
+				this._disableMarkers = false;
+			}.bind(this),
+			50
+		);
 	},
 
 	_cleanUpShape: function () {
 		if (this._markers.length > 1) {
-			this._markers[this._markers.length - 1].off('click', this._finishShape, this);
+			this._markers[this._markers.length - 1].off(
+				"click",
+				this._finishShape,
+				this
+			);
 		}
 	},
 
 	_fireCreatedEvent: function () {
-		var poly = new this.Poly(this._poly.getLatLngs(), this.options.shapeOptions);
+		var poly = new this.Poly(
+			this._poly.getLatLngs(),
+			this.options.shapeOptions
+		);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, poly);
-	}
+	},
 });

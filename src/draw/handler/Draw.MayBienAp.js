@@ -9,13 +9,24 @@ L.Draw.MayBienAp = L.Draw.Feature.extend({
 	},
 
 	options: {
-		icon: new L.Icon.Default(),
+		icon: new L.DivIcon({
+			iconSize: new L.Point(8, 8),
+			className: "leaflet-div-icon leaflet-editing-icon",
+		}),
+		touchIcon: new L.DivIcon({
+			iconSize: new L.Point(20, 20),
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-touch-icon",
+		}),
 		repeatMode: false,
 		zIndexOffset: 2000, // This should be > than the highest z-index any markers
 	},
 
 	// @method initialize(): void
 	initialize: function (map, options) {
+		// if touch, switch to touch icon
+		if (L.Browser.touch) {
+			this.options.icon = this.options.touchIcon;
+		}
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
 		this.type = L.Draw.MayBienAp.TYPE;
 

@@ -12,7 +12,7 @@ L.DrawToolbar = L.Toolbar.extend({
 		thanhCai: {},
 		mayBienAp: {},
 		duongDay: {},
-		// polyline: {},
+		polyline: {},
 		// polygon: {},
 		// rectangle: {},
 		// circle: {},
@@ -59,11 +59,11 @@ L.DrawToolbar = L.Toolbar.extend({
 				handler: new L.Draw.DuongDay(map, this.options.duongDay),
 				title: L.drawLocal.draw.toolbar.buttons.duongDay,
 			},
-			// {
-			// 	enabled: this.options.polyline,
-			// 	handler: new L.Draw.Polyline(map, this.options.polyline),
-			// 	title: L.drawLocal.draw.toolbar.buttons.polyline,
-			// },
+			{
+				enabled: this.options.polyline,
+				handler: new L.Draw.Polyline(map, this.options.polyline),
+				title: L.drawLocal.draw.toolbar.buttons.polyline,
+			},
 			// {
 			// 	enabled: this.options.polygon,
 			// 	handler: new L.Draw.Polygon(map, this.options.polygon),

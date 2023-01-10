@@ -1,105 +1,342 @@
 <!DOCTYPE html>
 <html>
+	<head>
+		<title>Leaflet.draw vector editing handlers</title>
 
-<head>
-    <title>Leaflet.draw vector editing handlers</title>
+		<script src="libs/leaflet-src.js"></script>
+		<link rel="stylesheet" href="libs/leaflet.css" />
+		<script src="../../src/leaflet.extension.js"></script>
 
-    <script src="libs/leaflet-src.js"></script>
-    <link rel="stylesheet" href="libs/leaflet.css" />
-    <script src="../../src/leaflet.extension.js"></script>
+		<script src="../../src/Leaflet.draw.js"></script>
+		<script src="../../src/Leaflet.Draw.Event.js"></script>
+		<link rel="stylesheet" href="../../src/leaflet.draw.css" />
 
-    <script src="../../src/Leaflet.draw.js"></script>
-    <script src="../../src/Leaflet.Draw.Event.js"></script>
-    <link rel="stylesheet" href="../../src/leaflet.draw.css" />
+		<script src="../../src/Toolbar.js"></script>
+		<script src="../../src/Tooltip.js"></script>
 
-    <script src="../../src/Toolbar.js"></script>
-    <script src="../../src/Tooltip.js"></script>
+		<script src="../../src/ext/GeometryUtil.js"></script>
+		<script src="../../src/ext/LatLngUtil.js"></script>
+		<script src="../../src/ext/LineUtil.Intersect.js"></script>
+		<script src="../../src/ext/Polygon.Intersect.js"></script>
+		<script src="../../src/ext/Polyline.Intersect.js"></script>
+		<script src="../../src/ext/TouchEvents.js"></script>
 
-    <script src="../../src/ext/GeometryUtil.js"></script>
-    <script src="../../src/ext/LatLngUtil.js"></script>
-    <script src="../../src/ext/LineUtil.Intersect.js"></script>
-    <script src="../../src/ext/Polygon.Intersect.js"></script>
-    <script src="../../src/ext/Polyline.Intersect.js"></script>
-    <script src="../../src/ext/TouchEvents.js"></script>
+		<script src="../../src/draw/DrawToolbar.js"></script>
+		<script src="../../src/draw/handler/Draw.Feature.js"></script>
+		<script src="../../src/draw/handler/Draw.SimpleShape.js"></script>
+		<script src="../../src/draw/handler/Draw.Polyline.js"></script>
+		<script src="../../src/draw/handler/Draw.Marker.js"></script>
+		<script src="../../src/draw/handler/Draw.Circle.js"></script>
+		<script src="../../src/draw/handler/Draw.CircleMarker.js"></script>
+		<script src="../../src/draw/handler/Draw.Polygon.js"></script>
+		<script src="../../src/draw/handler/Draw.Rectangle.js"></script>
+		<script src="../../src/draw/handler/Draw.DuongDay.js"></script>
+		<script src="../../src/draw/handler/Draw.ThanhCai.js"></script>
+		<script src="../../src/draw/handler/Draw.Role.js"></script>
+		<script src="../../src/draw/handler/Draw.MayBienAp.js"></script>
 
-    <script src="../../src/draw/DrawToolbar.js"></script>
-    <script src="../../src/draw/handler/Draw.Feature.js"></script>
-    <script src="../../src/draw/handler/Draw.SimpleShape.js"></script>
-    <script src="../../src/draw/handler/Draw.Polyline.js"></script>
-    <script src="../../src/draw/handler/Draw.Marker.js"></script>
-    <script src="../../src/draw/handler/Draw.Circle.js"></script>
-    <script src="../../src/draw/handler/Draw.CircleMarker.js"></script>
-    <script src="../../src/draw/handler/Draw.Polygon.js"></script>
-    <script src="../../src/draw/handler/Draw.Rectangle.js"></script>
-    <script src="../../src/draw/handler/Draw.DuongDay.js"></script>
-    <script src="../../src/draw/handler/Draw.ThanhCai.js"></script>
-    <script src="../../src/draw/handler/Draw.Role.js"></script>
-    <script src="../../src/draw/handler/Draw.MayBienAp.js"></script>
+		<script src="../../src/edit/EditToolbar.js"></script>
+		<script src="../../src/edit/handler/EditToolbar.Edit.js"></script>
+		<script src="../../src/edit/handler/EditToolbar.Delete.js"></script>
 
-    <script src="../../src/edit/EditToolbar.js"></script>
-    <script src="../../src/edit/handler/EditToolbar.Edit.js"></script>
-    <script src="../../src/edit/handler/EditToolbar.Delete.js"></script>
+		<script src="../../src/Control.Draw.js"></script>
 
-    <script src="../../src/Control.Draw.js"></script>
+		<script src="../../src/edit/handler/Edit.Poly.js"></script>
+		<script src="../../src/edit/handler/Edit.SimpleShape.js"></script>
+		<script src="../../src/edit/handler/Edit.Rectangle.js"></script>
+		<script src="../../src/edit/handler/Edit.Marker.js"></script>
+		<script src="../../src/edit/handler/Edit.CircleMarker.js"></script>
+		<script src="../../src/edit/handler/Edit.Circle.js"></script>
+		<script src="../../src/edit/handler/Edit.ThanhCai.js"></script>
+		<script src="../../src/edit/handler/Edit.Role.js"></script>
+		<script src="../../src/edit/handler/Edit.MayBienAp.js"></script>
 
-    <script src="../../src/edit/handler/Edit.Poly.js"></script>
-    <script src="../../src/edit/handler/Edit.SimpleShape.js"></script>
-    <script src="../../src/edit/handler/Edit.Rectangle.js"></script>
-    <script src="../../src/edit/handler/Edit.Marker.js"></script>
-    <script src="../../src/edit/handler/Edit.CircleMarker.js"></script>
-    <script src="../../src/edit/handler/Edit.Circle.js"></script>
-    <script src="../../src/edit/handler/Edit.ThanhCai.js"></script>
-    <script src="../../src/edit/handler/Edit.Role.js"></script>
-    <script src="../../src/edit/handler/Edit.MayBienAp.js"></script>
-</head>
+		<script src="../../src/leaflet.geometryutil.js"></script>
+		<script src="../../src/leaflet.snap.js"></script>
 
-<body>
-    <div id="map" style="width: 800px; height: 600px; border: 1px solid #ccc"></div>
+		<style>
+			* {
+				box-sizing: border-box;
+				padding: 0;
+				margin: 0;
+			}
+			html,
+			body {
+				height: 100%;
+				width: 100%;
+			}
+			#map {
+				width: auto;
+				height: 100%;
+			}
+		</style>
+	</head>
 
-    <script>
-        var map = new L.Map('map', { center: new L.LatLng(0, 0), zoom: 18 }),
-            drawnItems = L.featureGroup().addTo(map);
-        L.control.layers({}, { 'drawlayer': drawnItems }, { position: 'topleft', collapsed: false }).addTo(map);
-        map.addControl(new L.Control.Draw({
-            edit: {
-                featureGroup: drawnItems,
-                poly: {
-                    allowIntersection: false
-                },
-                edit: {
-                    selectedPathOptions: {
-                        dashArray: '10, 10',
-                        fill: false,
-                        fillColor: '#fe57a1',
-                        fillOpacity: 0.1,
-                        // Whether to user the existing layers color
-                        maintainColor: false,
-                    },
-                },
-                remove: true,
-            },
-            draw: {
-                polygon: {
-                    allowIntersection: false,
-                    showArea: true
-                }
-            }
-        }));
+	<body>
+		<div id="map"></div>
 
-        map.on(L.Draw.Event.CREATED, function (event) {
-            var layer = event.layer;
+		<script>
+			var map = new L.Map("map", {
+					center: new L.LatLng(0, 0),
+					zoom: 18,
+					maxZoom: 23,
+					minZoom: 10,
+				}),
+				drawnItems = L.featureGroup().addTo(map),
+				guildLayers = L.featureGroup([]).addTo(map);
+			L.control
+				.layers(
+					{},
+					{ drawlayer: drawnItems },
+					{ position: "topright", collapsed: false }
+				)
+				.addTo(map);
+			L.control
+				.layers(
+					{},
+					{ guildlayer: guildLayers },
+					{ position: "topright", collapsed: false }
+				)
+				.addTo(map);
+			var drawControl = new L.Control.Draw({
+				edit: {
+					featureGroup: drawnItems,
+					poly: {
+						allowIntersection: false,
+					},
+					edit: {
+						selectedPathOptions: {
+							dashArray: "10, 10",
+							fill: false,
+							fillColor: "#fe57a1",
+							fillOpacity: 0.1,
+							// Whether to user the existing layers color
+							maintainColor: false,
+						},
+					},
+					remove: true,
+				},
+				draw: {
+					polygon: {
+						allowIntersection: false,
+						showArea: true,
+					},
+					role: {
+						gocXoay: 0,
+						weight: 9,
+						lineCap: "square",
+						lineJoin: "square",
+					},
+					thanhCai: {
+						gocXoay: 90,
+						weight: 9,
+						lineCap: "square",
+					},
+					mayBienAp: {
+						gocXoay: 0,
+						weight: 9,
+						lineCap: "square",
+					},
+				},
+			});
 
-            drawnItems.addLayer(layer);
-        });
+			drawControl.setDrawingOptions({
+				polyline: { guideLayers: [guildLayers], snapDistance: 5 },
+				role: {
+					guideLayers: [guildLayers],
+					snapDistance: 10,
+					gocXoay: 0,
+					weight: 9,
+					lineCap: "square",
+					lineJoin: "square",
+				},
+				thanhCai: {
+					guideLayers: [guildLayers],
+					snapDistance: 10,
+					gocXoay: 0,
+					weight: 9,
+					lineCap: "square",
+				},
+				mayBienAp: {
+					guideLayers: [guildLayers],
+					snapDistance: 10,
+					gocXoay: 0,
+					weight: 9,
+					lineCap: "square",
+				},
+			});
 
-        map.on(L.Draw.Event.EDITED, function (e) {
-            console.log(e);
-        });
+			map.addControl(drawControl);
 
-        const thanhCai = L.thanhCai(L.latLng(0, 0), { gocXoay: 90 }).addTo(map);
-        console.log(thanhCai.getLatLngSnaps());
+			map.on(L.Draw.Event.CREATED, function (event) {
+				var layer = event.layer;
+				drawnItems.addLayer(layer);
+			});
 
-    </script>
-</body>
+			map.on(L.Draw.Event.EDITED, function (e) {
+				console.log(e);
+			});
 
+			// L.polyline([L.latLng(0, 180), L.latLng(0, -180)]).addTo(map);
+			// L.polyline([L.latLng(90, 0), L.latLng(-90, 0)]).addTo(map);
+
+			L.GuideLayer = L.Class.extend({
+				options: {
+					distance: 10,
+				},
+				initialize: function (map, options) {
+					L.setOptions(this, options);
+					this._map = map;
+				},
+				_genLatLngs: function () {
+					var ret = [];
+					var tpms = this._getLatLngs(
+						this._getLatLngO(),
+						L.GeometryUtil.closestOnSegment(
+							this._map,
+							this._getLatLngO(),
+							this._getLatLngA(),
+							this._getLatLngD()
+						),
+						this.options.distance
+					);
+					tpms = tpms.concat(
+						this._getLatLngs(
+							this._getLatLngO(),
+							L.GeometryUtil.closestOnSegment(
+								this._map,
+								this._getLatLngO(),
+								this._getLatLngB(),
+								this._getLatLngC()
+							),
+							this.options.distance
+						)
+					);
+					tpms.push(this._getLatLngO());
+					tpms.forEach((element) => {
+						const dAB = L.GeometryUtil.closestOnSegment(
+							this._map,
+							element,
+							this._getLatLngA(),
+							this._getLatLngB()
+						);
+						ret = ret.concat(
+							this._getLatLngs(element, dAB, this.options.distance)
+						);
+
+						const dCD = L.GeometryUtil.closestOnSegment(
+							this._map,
+							element,
+							this._getLatLngC(),
+							this._getLatLngD()
+						);
+						ret = ret.concat(
+							this._getLatLngs(element, dCD, this.options.distance)
+						);
+
+						ret.push(element);
+					});
+					return ret;
+				},
+				_getLatLngs: function (latlngA, latlngB, distance) {
+					var ret = [];
+					const n = this._getNumberLatLng(latlngA, latlngB, distance);
+					var angle = L.GeometryUtil.angle(this._map, latlngA, latlngB);
+					for (var i = 1; i <= n; i++) {
+						ret.push(L.GeometryUtil.destination(latlngA, angle, i * distance));
+					}
+					return ret;
+				},
+				_getNumberLatLng: function (latlngA, latlngB, distance) {
+					return Math.floor(latlngA.distanceTo(latlngB) / distance);
+				},
+				_getLatLngO: function () {
+					const gocO = L.latLng(0, 0);
+					const center = this._map.getCenter();
+					const angle = L.GeometryUtil.angle(this._map, center, gocO);
+					const dCenterGocO = gocO.distanceTo(center);
+					const radius = Math.sqrt(2 * Math.pow(this.options.distance, 2));
+
+					const r = dCenterGocO % radius;
+					console.log(dCenterGocO);
+					console.log(radius);
+					console.log(dCenterGocO / radius);
+					console.log(r);
+					if (r !== 0) {
+						return L.GeometryUtil.destination(
+							center,
+							L.GeometryUtil.angle(this._map, center, gocO),
+							r
+						);
+					}
+					return this._map.getCenter();
+				},
+				_getDistanceToAB: function (latlng) {
+					return L.GeometryUtil.closestOnSegment(
+						this._map,
+						latlng,
+						this._getLatLngA(),
+						this._getLatLngB()
+					).distanceTo(latlng);
+				},
+				_getDistanceToBC: function (latlng) {
+					return L.GeometryUtil.closestOnSegment(
+						this._map,
+						latlng,
+						this._getLatLngB(),
+						this._getLatLngC()
+					).distanceTo(latlng);
+				},
+				_getDistanceToCD: function (latlng) {
+					return L.GeometryUtil.closestOnSegment(
+						this._map,
+						latlng,
+						this._getLatLngC(),
+						this._getLatLngD()
+					).distanceTo(latlng);
+				},
+				_getDistanceToDA: function (latlng) {
+					return L.GeometryUtil.closestOnSegment(
+						this._map,
+						latlng,
+						this._getLatLngD(),
+						this._getLatLngA()
+					).distanceTo(latlng);
+				},
+				_getLatLngA: function () {
+					return this._map.getBounds().getNorthWest();
+				},
+				_getLatLngB: function () {
+					return this._map.getBounds().getNorthEast();
+				},
+				_getLatLngC: function () {
+					return this._map.getBounds().getSouthEast();
+				},
+				_getLatLngD: function () {
+					return this._map.getBounds().getSouthWest();
+				},
+			});
+
+			L.guideLayer = function (map, options) {
+				return new L.GuideLayer(map, options);
+			};
+			const guideLayerT = L.guideLayer(map, { distance: 20 });
+
+			const latlngs = guideLayerT._genLatLngs();
+			latlngs.forEach((e) => {
+				guildLayers.addLayer(L.circleMarker(e, { radius: 1 }));
+			});
+
+			map.on("move", function (e) {
+				const zoom = map.getZoom();
+				guildLayers.clearLayers();
+				if (zoom >= 18) {
+					const latlngs = guideLayerT._genLatLngs();
+					latlngs.forEach((e) => {
+						guildLayers.addLayer(L.circleMarker(e, { radius: 1 }));
+					});
+				}
+			});
+		</script>
+	</body>
 </html>
