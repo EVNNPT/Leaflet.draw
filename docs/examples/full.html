@@ -96,7 +96,8 @@
             console.log(e);
         });
 
-        // const thanhCai = L.thanhCai(L.latLng(0, 0)).addTo(map);
+        const thanhCai = L.thanhCai(L.latLng(0, 0), { gocXoay: 90 }).addTo(map);
+        console.log(thanhCai.getLatLngSnaps());
 
     </script>
 </body>

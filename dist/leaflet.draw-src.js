@@ -1,5 +1,5 @@
 /*
- Leaflet.draw 1.0.4+55b0f2c, a plugin that adds drawing and editing tools to Leaflet powered maps.
+ Leaflet.draw 1.0.4+735fc49, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
 
  https://github.com/Leaflet/Leaflet.draw
@@ -291,6 +291,7 @@ L.MayBienAp = L.Path.extend({
 			)
 		);
 	},
+
 	rotate: function (latlng) {
 		const map = this._map;
 		const centerPoint = this._latlng;
@@ -298,6 +299,7 @@ L.MayBienAp = L.Path.extend({
 		this.options.gocXoay = angle;
 		this.redraw();
 	},
+
 	resize: function (latlng) {
 		const map = this._map;
 		const pC = this._getLatLngC();
@@ -310,6 +312,7 @@ L.MayBienAp = L.Path.extend({
 		this.options.chieuDai = Math.abs(2 * d);
 		this.redraw();
 	},
+
 	move: function (latlng) {
 		this._latlng = latlng;
 		this.redraw();
@@ -360,6 +363,9 @@ L.ThanhCai = L.Polyline.extend({
 			this.options.chieuDai / 2
 		);
 		return [diemA, diemB];
+	},
+	getLatLngSnaps: function () {
+		return this.getLatLngs();
 	},
 	getRotateMarker: function () {
 		const centerPoint = this.getCenterCus();
@@ -495,11 +501,28 @@ L.Role = L.Polyline.extend({
 		this.options.gocXoay = angle;
 		this.setLatLngs(this._roleLatLngs(centerPoint));
 	},
+	getLatLngSnaps: function () {
+		const latlngs = this.getLatLngs();
+		const pA = latlngs[0];
+		const pB = latlngs[1];
+		const pAD = L.GeometryUtil.destination(
+			pA,
+			-this.options.gocXoay - 90,
+			this.options.chieuRong / 2
+		);
+		const pBC = L.GeometryUtil.destination(
+			pB,
+			this.options.gocXoay + 90,
+			this.options.chieuDai / 2
+		);
+		return [pAD, pBC];
+	},
 });
 
 L.role = function (latlng, options) {
 	return new L.Role(latlng, options);
 };
+//#endregion
 
 
 
@@ -7077,16 +7100,13 @@ L.EditToolbar.Edit = L.Handler.extend({
 			if (layer.edited) {
 				var options = layer.options;
 				if (layer instanceof L.Role) {
-					console.log("Role");
 					options.original.chieuDai = options.chieuDai;
 					options.original.chieuRong = options.chieuRong;
 					options.original.gocXoay = options.gocXoay;
 				} else if (layer instanceof L.ThanhCai) {
-					console.log("ThanhCai");
 					options.original.chieuDai = options.chieuDai;
 					options.original.gocXoay = options.gocXoay;
 				} else if (layer instanceof L.MayBienAp) {
-					console.log("MayBienAp");
 					options.original.chieuDai = options.chieuDai;
 					options.original.gocXoay = options.gocXoay;
 				}
@@ -7120,6 +7140,15 @@ L.EditToolbar.Edit = L.Handler.extend({
 						gocXoay: options.gocXoay,
 					},
 				};
+			} else if (layer instanceof L.MayBienAp) {
+				const latLng = layer.getLatLng();
+				this._uneditedLayerProps[id] = {
+					latlng: L.latLng(latLng.lat, latLng.lng),
+					options: {
+						chieuDai: options.chieuDai,
+						gocXoay: options.gocXoay,
+					},
+				};
 			}
 		}
 	},
@@ -7139,9 +7168,11 @@ L.EditToolbar.Edit = L.Handler.extend({
 		const id = L.Util.stamp(layer);
 		layer.edited = false;
 		if (this._uneditedLayerProps.hasOwnProperty(id)) {
+			L.setOptions(layer, this._uneditedLayerProps[id].options);
 			if (layer instanceof L.Role || layer instanceof L.ThanhCai) {
 				layer.setLatLngs(this._uneditedLayerProps[id].latlngs);
-				L.setOptions(layer, this._uneditedLayerProps[id].options);
+			} else if (layer instanceof L.MayBienAp) {
+				layer.setLatLng(this._uneditedLayerProps[id].latlng);
 			}
 			layer.fire("revert-edited", { layer: layer });
 		}

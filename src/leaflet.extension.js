@@ -357,6 +357,9 @@ L.ThanhCai = L.Polyline.extend({
 		);
 		return [diemA, diemB];
 	},
+	getLatLngSnaps: function () {
+		return this.getLatLngs();
+	},
 	getRotateMarker: function () {
 		const centerPoint = this.getCenterCus();
 		return L.GeometryUtil.destination(
@@ -491,8 +494,25 @@ L.Role = L.Polyline.extend({
 		this.options.gocXoay = angle;
 		this.setLatLngs(this._roleLatLngs(centerPoint));
 	},
+	getLatLngSnaps: function () {
+		const latlngs = this.getLatLngs();
+		const pA = latlngs[0];
+		const pB = latlngs[1];
+		const pAD = L.GeometryUtil.destination(
+			pA,
+			-this.options.gocXoay - 90,
+			this.options.chieuRong / 2
+		);
+		const pBC = L.GeometryUtil.destination(
+			pB,
+			this.options.gocXoay + 90,
+			this.options.chieuDai / 2
+		);
+		return [pAD, pBC];
+	},
 });
 
 L.role = function (latlng, options) {
 	return new L.Role(latlng, options);
 };
+//#endregion
