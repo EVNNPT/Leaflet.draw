@@ -364,7 +364,6 @@
 				.on(
 					"snap",
 					function (e) {
-						console.log(this.options.icon);
 						marker.setIcon(this.options.icon);
 						marker.setOpacity(1);
 					},

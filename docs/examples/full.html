@@ -78,7 +78,7 @@
 		<script>
 			var map = new L.Map("map", {
 					center: new L.LatLng(0, 0),
-					zoom: 18,
+					zoom: 19,
 					maxZoom: 23,
 					minZoom: 10,
 				}),
@@ -91,7 +91,7 @@
 					{ position: "topright", collapsed: false }
 				)
 				.addTo(map);
-			L.control
+			const guidLayerCtrl = L.control
 				.layers(
 					{},
 					{ guildlayer: guildLayers },
@@ -166,6 +166,17 @@
 				},
 			});
 
+			var editToolbar = new L.EditToolbar.SnapEdit(map, {
+				featureGroup: L.featureGroup([drawnItems]),
+				snapOptions: {
+					guideLayers: [guildLayers],
+				},
+			});
+
+			console.log(editToolbar);
+
+			// editToolbar.enable();
+
 			map.addControl(drawControl);
 
 			map.on(L.Draw.Event.CREATED, function (event) {
@@ -182,11 +193,15 @@
 
 			L.GuideLayer = L.Class.extend({
 				options: {
-					distance: 10,
+					width: 10,
+					height: 10,
 				},
 				initialize: function (map, options) {
 					L.setOptions(this, options);
 					this._map = map;
+					this._gocO = L.latLng(0, 0);
+					this._lineX = this._getLineX();
+					this._lineY = this._getLineY();
 				},
 				_genLatLngs: function () {
 					var ret = [];
@@ -198,7 +213,7 @@
 							this._getLatLngA(),
 							this._getLatLngD()
 						),
-						this.options.distance
+						this.options.width
 					);
 					tpms = tpms.concat(
 						this._getLatLngs(
@@ -209,7 +224,7 @@
 								this._getLatLngB(),
 								this._getLatLngC()
 							),
-							this.options.distance
+							this.options.width
 						)
 					);
 					tpms.push(this._getLatLngO());
@@ -221,7 +236,7 @@
 							this._getLatLngB()
 						);
 						ret = ret.concat(
-							this._getLatLngs(element, dAB, this.options.distance)
+							this._getLatLngs(element, dAB, this.options.height)
 						);
 
 						const dCD = L.GeometryUtil.closestOnSegment(
@@ -231,7 +246,7 @@
 							this._getLatLngD()
 						);
 						ret = ret.concat(
-							this._getLatLngs(element, dCD, this.options.distance)
+							this._getLatLngs(element, dCD, this.options.height)
 						);
 
 						ret.push(element);
@@ -250,26 +265,83 @@
 				_getNumberLatLng: function (latlngA, latlngB, distance) {
 					return Math.floor(latlngA.distanceTo(latlngB) / distance);
 				},
-				_getLatLngO: function () {
-					const gocO = L.latLng(0, 0);
-					const center = this._map.getCenter();
-					const angle = L.GeometryUtil.angle(this._map, center, gocO);
-					const dCenterGocO = gocO.distanceTo(center);
-					const radius = Math.sqrt(2 * Math.pow(this.options.distance, 2));
-
-					const r = dCenterGocO % radius;
-					console.log(dCenterGocO);
-					console.log(radius);
-					console.log(dCenterGocO / radius);
-					console.log(r);
-					if (r !== 0) {
-						return L.GeometryUtil.destination(
-							center,
-							L.GeometryUtil.angle(this._map, center, gocO),
-							r
-						);
+				_getLineX: function () {
+					return L.polyline([L.latLng(0, -180), L.latLng(0, 180)]);
+				},
+				_getLineY: function () {
+					return L.polyline([L.latLng(90, 0), L.latLng(-90, 0)]);
+				},
+				_getGocPhanTu: function () {
+					const angle = L.GeometryUtil.angle(
+						this._map,
+						this._gocO,
+						this._map.getCenter()
+					);
+					var ret = 1;
+					if (angle >= 0 && angle <= 90) {
+						ret = 1;
+					} else if (angle > 90 && angle <= 180) {
+						ret = 2;
+					} else if (angle > 180 && angle <= 270) {
+						ret = 3;
+					} else {
+						ret = 4;
 					}
-					return this._map.getCenter();
+					return ret;
+				},
+				_getDistaceCenterToLineX() {
+					const latlngs = this._lineX.getLatLngs();
+					return L.GeometryUtil.closestOnSegment(
+						this._map,
+						this._map.getCenter(),
+						latlngs[0],
+						latlngs[1]
+					).distanceTo(this._map.getCenter());
+				},
+				_getDistaceCenterToLineY() {
+					const latlngs = this._lineY.getLatLngs();
+					return L.GeometryUtil.closestOnSegment(
+						this._map,
+						this._map.getCenter(),
+						latlngs[0],
+						latlngs[1]
+					).distanceTo(this._map.getCenter());
+				},
+				_getLatLngO: function () {
+					const gocPhanTu = this._getGocPhanTu();
+					const dY = this._getDistaceCenterToLineY();
+					const dX = this._getDistaceCenterToLineX();
+					const center = this._map.getCenter();
+					var rY = dY % this.options.width;
+					var rX = dX % this.options.height;
+					if (rY !== 0 || rX !== 0) {
+						if (gocPhanTu === 1) {
+							return L.GeometryUtil.destination(
+								L.GeometryUtil.destination(center, 180, rX),
+								-90,
+								rY
+							);
+						} else if (gocPhanTu === 2) {
+							return L.GeometryUtil.destination(
+								L.GeometryUtil.destination(center, 0, rX),
+								-90,
+								rY
+							);
+						} else if (gocPhanTu === 3) {
+							return L.GeometryUtil.destination(
+								L.GeometryUtil.destination(center, 0, rX),
+								90,
+								rY
+							);
+						} else {
+							return L.GeometryUtil.destination(
+								L.GeometryUtil.destination(center, 180, rX),
+								90,
+								rY
+							);
+						}
+					}
+					return center;
 				},
 				_getDistanceToAB: function (latlng) {
 					return L.GeometryUtil.closestOnSegment(
@@ -320,21 +392,29 @@
 			L.guideLayer = function (map, options) {
 				return new L.GuideLayer(map, options);
 			};
-			const guideLayerT = L.guideLayer(map, { distance: 20 });
+			const guideLayerT = L.guideLayer(map, { height: 15, width: 15 });
 
 			const latlngs = guideLayerT._genLatLngs();
 			latlngs.forEach((e) => {
-				guildLayers.addLayer(L.circleMarker(e, { radius: 1 }));
+				guildLayers.addLayer(
+					L.circleMarker(e, { radius: 0.5, color: "black", fill: false })
+				);
 			});
 
 			map.on("move", function (e) {
 				const zoom = map.getZoom();
 				guildLayers.clearLayers();
-				if (zoom >= 18) {
+				console.log(guidLayerCtrl);
+				if (zoom >= 19) {
+					guidLayerCtrl.addTo(map);
 					const latlngs = guideLayerT._genLatLngs();
 					latlngs.forEach((e) => {
-						guildLayers.addLayer(L.circleMarker(e, { radius: 1 }));
+						guildLayers.addLayer(
+							L.circleMarker(e, { radius: 0.5, color: "black", fill: false })
+						);
 					});
+				} else {
+					guidLayerCtrl.remove();
 				}
 			});
 		</script>
