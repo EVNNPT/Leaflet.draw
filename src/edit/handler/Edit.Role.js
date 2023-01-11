@@ -4,7 +4,11 @@ L.Edit = L.Edit || {};
  * @aka Edit.Circle
  * @inherits L.Edit.SimpleShape
  */
-L.Edit.Role = L.Edit.SimpleShape.extend({
+L.Edit.Role = L.Edit.SimpleShapeSnap.extend({
+	initialize: function (shape, options) {
+		L.Edit.SimpleShapeSnap.prototype.initialize.call(this, shape, options);
+	},
+
 	_createMoveMarker: function () {
 		this._moveMarker = this._createMarker(
 			this._shape.getCenterCus(),
@@ -56,8 +60,7 @@ L.Role.addInitHook(function () {
 	}
 
 	if (L.Edit.Role) {
-		this.editing = new L.Edit.Role(this);
-
+		this.editing = new L.Edit.Role(this, this.options);
 		if (this.options.editable) {
 			this.editing.enable();
 		}

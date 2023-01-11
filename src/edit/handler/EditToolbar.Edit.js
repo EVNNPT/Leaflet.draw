@@ -141,6 +141,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 				} else if (layer instanceof L.MayBienAp) {
 					options.original.chieuDai = options.chieuDai;
 					options.original.gocXoay = options.gocXoay;
+				} else if (layer instanceof L.DuongDay) {
 				}
 				editedLayers.addLayer(layer);
 				layer.edited = false;
@@ -181,6 +182,10 @@ L.EditToolbar.Edit = L.Handler.extend({
 						gocXoay: options.gocXoay,
 					},
 				};
+			} else if (layer instanceof L.DuongDay) {
+				this._uneditedLayerProps[id] = {
+					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs()),
+				};
 			}
 		}
 	},
@@ -201,7 +206,11 @@ L.EditToolbar.Edit = L.Handler.extend({
 		layer.edited = false;
 		if (this._uneditedLayerProps.hasOwnProperty(id)) {
 			L.setOptions(layer, this._uneditedLayerProps[id].options);
-			if (layer instanceof L.Role || layer instanceof L.ThanhCai) {
+			if (
+				layer instanceof L.Role ||
+				layer instanceof L.ThanhCai ||
+				layer instanceof L.DuongDay
+			) {
 				layer.setLatLngs(this._uneditedLayerProps[id].latlngs);
 			} else if (layer instanceof L.MayBienAp) {
 				layer.setLatLng(this._uneditedLayerProps[id].latlng);

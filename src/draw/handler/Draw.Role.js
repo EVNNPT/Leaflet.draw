@@ -18,7 +18,8 @@ L.Draw.Role = L.Draw.Feature.extend({
 			className: "leaflet-div-icon leaflet-editing-icon leaflet-touch-icon",
 		}),
 		repeatMode: false,
-		zIndexOffset: 2000, // This should be > than the highest z-index any markers
+		zIndexOffset: 2000, // This should be > than the highest z-index any markers,
+		isEditPoly: false,
 	},
 
 	// @method initialize(): void

@@ -129,6 +129,15 @@ L.Draw.Event.EDITRESIZE = "draw:editresize";
 L.Draw.Event.EDITROTATE = "draw:editrotate";
 
 /**
+ * @event draw:createmarker: ILayer
+ *
+ * Layer that was just moved.
+ *
+ * Triggered as the user rotate a object.
+ */
+L.Draw.Event.CREATEMARKER = "draw:createmarker";
+
+/**
  * @event draw:editvertex: LayerGroup
  *
  * List of all layers just being edited from the map.

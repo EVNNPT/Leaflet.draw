@@ -60,6 +60,18 @@ L.Renderer.include({
 	},
 });
 
+//#region L.DuongDay
+L.DuongDay = L.Polyline.extend({
+	initialize: function (latlngs, options) {
+		L.Polyline.prototype.initialize.call(this, latlngs, options);
+	},
+});
+
+L.duongDay = function (latlngs, options) {
+	return new L.DuongDay(latlngs, options);
+};
+//#endregion
+
 //#region L.MayBienAp
 L.MayBienAp = L.Path.extend({
 	options: {
@@ -406,6 +418,7 @@ L.Role = L.Polyline.extend({
 		gocXoay: 0,
 	},
 	initialize: function (centerPoint, options) {
+		this._centerPoint = centerPoint;
 		L.setOptions(this, options);
 		const latlngs = this._roleLatLngs(centerPoint);
 		L.Polyline.prototype.initialize.call(this, latlngs, options);
@@ -509,6 +522,9 @@ L.Role = L.Polyline.extend({
 			this.options.chieuDai / 2
 		);
 		return [pAD, pBC];
+	},
+	getCenter: function () {
+		return this._centerPoint;
 	},
 });
 

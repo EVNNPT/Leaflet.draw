@@ -1,422 +1,405 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Leaflet.draw vector editing handlers</title>
 
-		<script src="libs/leaflet-src.js"></script>
-		<link rel="stylesheet" href="libs/leaflet.css" />
-		<script src="../../src/leaflet.extension.js"></script>
+<head>
+	<title>Leaflet.draw vector editing handlers</title>
 
-		<script src="../../src/Leaflet.draw.js"></script>
-		<script src="../../src/Leaflet.Draw.Event.js"></script>
-		<link rel="stylesheet" href="../../src/leaflet.draw.css" />
+	<script src="../../src/leaflet-src.js"></script>
+	<link rel="stylesheet" href="libs/leaflet.css" />
+	<script src="../../src/leaflet.extension.js"></script>
 
-		<script src="../../src/Toolbar.js"></script>
-		<script src="../../src/Tooltip.js"></script>
+	<script src="../../src/Leaflet.draw.js"></script>
+	<script src="../../src/Leaflet.Draw.Event.js"></script>
+	<link rel="stylesheet" href="../../src/leaflet.draw.css" />
 
-		<script src="../../src/ext/GeometryUtil.js"></script>
-		<script src="../../src/ext/LatLngUtil.js"></script>
-		<script src="../../src/ext/LineUtil.Intersect.js"></script>
-		<script src="../../src/ext/Polygon.Intersect.js"></script>
-		<script src="../../src/ext/Polyline.Intersect.js"></script>
-		<script src="../../src/ext/TouchEvents.js"></script>
+	<script src="../../src/Toolbar.js"></script>
+	<script src="../../src/Tooltip.js"></script>
 
-		<script src="../../src/draw/DrawToolbar.js"></script>
-		<script src="../../src/draw/handler/Draw.Feature.js"></script>
-		<script src="../../src/draw/handler/Draw.SimpleShape.js"></script>
-		<script src="../../src/draw/handler/Draw.Polyline.js"></script>
-		<script src="../../src/draw/handler/Draw.Marker.js"></script>
-		<script src="../../src/draw/handler/Draw.Circle.js"></script>
-		<script src="../../src/draw/handler/Draw.CircleMarker.js"></script>
-		<script src="../../src/draw/handler/Draw.Polygon.js"></script>
-		<script src="../../src/draw/handler/Draw.Rectangle.js"></script>
-		<script src="../../src/draw/handler/Draw.DuongDay.js"></script>
-		<script src="../../src/draw/handler/Draw.ThanhCai.js"></script>
-		<script src="../../src/draw/handler/Draw.Role.js"></script>
-		<script src="../../src/draw/handler/Draw.MayBienAp.js"></script>
+	<script src="../../src/ext/GeometryUtil.js"></script>
+	<script src="../../src/ext/LatLngUtil.js"></script>
+	<script src="../../src/ext/LineUtil.Intersect.js"></script>
+	<script src="../../src/ext/Polygon.Intersect.js"></script>
+	<script src="../../src/ext/Polyline.Intersect.js"></script>
+	<script src="../../src/ext/TouchEvents.js"></script>
 
-		<script src="../../src/edit/EditToolbar.js"></script>
-		<script src="../../src/edit/handler/EditToolbar.Edit.js"></script>
-		<script src="../../src/edit/handler/EditToolbar.Delete.js"></script>
+	<script src="../../src/draw/DrawToolbar.js"></script>
+	<script src="../../src/draw/handler/Draw.Feature.js"></script>
+	<script src="../../src/draw/handler/Draw.SimpleShape.js"></script>
+	<script src="../../src/draw/handler/Draw.Polyline.js"></script>
+	<script src="../../src/draw/handler/Draw.Marker.js"></script>
+	<script src="../../src/draw/handler/Draw.Circle.js"></script>
+	<script src="../../src/draw/handler/Draw.CircleMarker.js"></script>
+	<script src="../../src/draw/handler/Draw.Polygon.js"></script>
+	<script src="../../src/draw/handler/Draw.Rectangle.js"></script>
+	<script src="../../src/draw/handler/Draw.DuongDay.js"></script>
+	<script src="../../src/draw/handler/Draw.ThanhCai.js"></script>
+	<script src="../../src/draw/handler/Draw.Role.js"></script>
+	<script src="../../src/draw/handler/Draw.MayBienAp.js"></script>
 
-		<script src="../../src/Control.Draw.js"></script>
+	<script src="../../src/edit/EditToolbar.js"></script>
+	<script src="../../src/edit/handler/EditToolbar.Edit.js"></script>
+	<script src="../../src/edit/handler/EditToolbar.Delete.js"></script>
 
-		<script src="../../src/edit/handler/Edit.Poly.js"></script>
-		<script src="../../src/edit/handler/Edit.SimpleShape.js"></script>
-		<script src="../../src/edit/handler/Edit.Rectangle.js"></script>
-		<script src="../../src/edit/handler/Edit.Marker.js"></script>
-		<script src="../../src/edit/handler/Edit.CircleMarker.js"></script>
-		<script src="../../src/edit/handler/Edit.Circle.js"></script>
-		<script src="../../src/edit/handler/Edit.ThanhCai.js"></script>
-		<script src="../../src/edit/handler/Edit.Role.js"></script>
-		<script src="../../src/edit/handler/Edit.MayBienAp.js"></script>
+	<script src="../../src/Control.Draw.js"></script>
 
-		<script src="../../src/leaflet.geometryutil.js"></script>
-		<script src="../../src/leaflet.snap.js"></script>
+	<script src="../../src/edit/handler/Edit.Poly.js"></script>
+	<script src="../../src/edit/handler/Edit.SimpleShape.js"></script>
+	<script src="../../src/edit/handler/Edit.SimpleShapeSnap.js"></script>
+	<script src="../../src/edit/handler/Edit.Rectangle.js"></script>
+	<script src="../../src/edit/handler/Edit.Marker.js"></script>
+	<script src="../../src/edit/handler/Edit.CircleMarker.js"></script>
+	<script src="../../src/edit/handler/Edit.Circle.js"></script>
+	<script src="../../src/edit/handler/Edit.ThanhCai.js"></script>
+	<script src="../../src/edit/handler/Edit.Role.js"></script>
+	<script src="../../src/edit/handler/Edit.MayBienAp.js"></script>
+	<script src="../../src/edit/handler/Edit.DuongDay.js"></script>
 
-		<style>
-			* {
-				box-sizing: border-box;
-				padding: 0;
-				margin: 0;
-			}
-			html,
-			body {
-				height: 100%;
-				width: 100%;
-			}
-			#map {
-				width: auto;
-				height: 100%;
-			}
-		</style>
-	</head>
+	<script src="../../src/leaflet.snap.js"></script>
+	<script src="../../src/leaflet.geometryutil.js"></script>
 
-	<body>
-		<div id="map"></div>
+	<style>
+		* {
+			box-sizing: border-box;
+			padding: 0;
+			margin: 0;
+		}
 
-		<script>
-			var map = new L.Map("map", {
-					center: new L.LatLng(0, 0),
-					zoom: 19,
-					maxZoom: 23,
-					minZoom: 10,
-				}),
-				drawnItems = L.featureGroup().addTo(map),
-				guildLayers = L.featureGroup([]).addTo(map);
-			L.control
-				.layers(
-					{},
-					{ drawlayer: drawnItems },
-					{ position: "topright", collapsed: false }
-				)
-				.addTo(map);
-			const guidLayerCtrl = L.control
-				.layers(
-					{},
-					{ guildlayer: guildLayers },
-					{ position: "topright", collapsed: false }
-				)
-				.addTo(map);
-			var drawControl = new L.Control.Draw({
+		html,
+		body {
+			height: 100%;
+			width: 100%;
+		}
+
+		#map {
+			width: auto;
+			height: 100%;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="map"></div>
+
+	<script>
+		var map = new L.Map("map", {
+			center: new L.LatLng(0, 0),
+			zoom: 18,
+			maxZoom: 25,
+			minZoom: 10,
+		}),
+			drawnItems = L.featureGroup().addTo(map),
+			guildLayers = L.featureGroup([]).addTo(map);
+		L.control
+			.layers(
+				{},
+				{ drawlayer: drawnItems },
+				{ position: "topright", collapsed: false }
+			)
+			.addTo(map);
+		const guidLayerCtrl = L.control
+			.layers(
+				{},
+				{ guildlayer: guildLayers },
+				{ position: "topright", collapsed: false }
+			)
+			.addTo(map);
+		var drawControl = new L.Control.Draw({
+			edit: {
+				featureGroup: drawnItems,
+				poly: {
+					allowIntersection: false,
+				},
 				edit: {
-					featureGroup: drawnItems,
-					poly: {
-						allowIntersection: false,
-					},
-					edit: {
-						selectedPathOptions: {
-							dashArray: "10, 10",
-							fill: false,
-							fillColor: "#fe57a1",
-							fillOpacity: 0.1,
-							// Whether to user the existing layers color
-							maintainColor: false,
-						},
-					},
-					remove: true,
-				},
-				draw: {
-					polygon: {
-						allowIntersection: false,
-						showArea: true,
-					},
-					role: {
-						gocXoay: 0,
-						weight: 9,
-						lineCap: "square",
-						lineJoin: "square",
-					},
-					thanhCai: {
-						gocXoay: 90,
-						weight: 9,
-						lineCap: "square",
-					},
-					mayBienAp: {
-						gocXoay: 0,
-						weight: 9,
-						lineCap: "square",
+					selectedPathOptions: {
+						dashArray: "10, 10",
+						fill: false,
+						fillColor: "#fe57a1",
+						fillOpacity: 0.1,
+						// Whether to user the existing layers color
+						maintainColor: false,
 					},
 				},
-			});
+				remove: true,
+			},
+			draw: {
+				polyline: false
+			},
+		});
 
-			drawControl.setDrawingOptions({
-				polyline: { guideLayers: [guildLayers], snapDistance: 5 },
-				role: {
-					guideLayers: [guildLayers],
-					snapDistance: 10,
-					gocXoay: 0,
-					weight: 9,
-					lineCap: "square",
-					lineJoin: "square",
-				},
-				thanhCai: {
-					guideLayers: [guildLayers],
-					snapDistance: 10,
-					gocXoay: 0,
-					weight: 9,
-					lineCap: "square",
-				},
-				mayBienAp: {
-					guideLayers: [guildLayers],
-					snapDistance: 10,
-					gocXoay: 0,
-					weight: 9,
-					lineCap: "square",
-				},
-			});
+		drawControl.setDrawingOptions({
+			duongDay: {
+				guideLayers: [guildLayers], snapDistance: 10, weight: 5,
+				lineCap: "square",
+				lineJoin: "square",
+				color: 'red'
+			},
+			role: {
+				guideLayers: [guildLayers],
+				snapDistance: 10,
+				gocXoay: 0,
+				weight: 9,
+				lineCap: "square",
+				lineJoin: "square",
+			},
+			thanhCai: {
+				guideLayers: [guildLayers],
+				snapDistance: 10,
+				gocXoay: 0,
+				weight: 9,
+				lineCap: "square",
+			},
+			mayBienAp: {
+				guideLayers: [guildLayers],
+				snapDistance: 10,
+				gocXoay: 0,
+				weight: 9,
+				lineCap: "square",
+			},
+		});
 
-			var editToolbar = new L.EditToolbar.SnapEdit(map, {
-				featureGroup: L.featureGroup([drawnItems]),
-				snapOptions: {
-					guideLayers: [guildLayers],
-				},
-			});
+		map.addControl(drawControl);
 
-			console.log(editToolbar);
+		map.on(L.Draw.Event.CREATED, function (event) {
+			var layer = event.layer;
+			drawnItems.addLayer(layer);
+		});
 
-			// editToolbar.enable();
+		map.on(L.Draw.Event.EDITED, function (e) {
+			console.log(e);
+		});
 
-			map.addControl(drawControl);
-
-			map.on(L.Draw.Event.CREATED, function (event) {
-				var layer = event.layer;
-				drawnItems.addLayer(layer);
-			});
-
-			map.on(L.Draw.Event.EDITED, function (e) {
-				console.log(e);
-			});
-
-			// L.polyline([L.latLng(0, 180), L.latLng(0, -180)]).addTo(map);
-			// L.polyline([L.latLng(90, 0), L.latLng(-90, 0)]).addTo(map);
-
-			L.GuideLayer = L.Class.extend({
-				options: {
-					width: 10,
-					height: 10,
-				},
-				initialize: function (map, options) {
-					L.setOptions(this, options);
-					this._map = map;
-					this._gocO = L.latLng(0, 0);
-					this._lineX = this._getLineX();
-					this._lineY = this._getLineY();
-				},
-				_genLatLngs: function () {
-					var ret = [];
-					var tpms = this._getLatLngs(
+		L.GuideLayer = L.Class.extend({
+			options: {
+				width: 10,
+				height: 10,
+			},
+			initialize: function (map, options) {
+				L.setOptions(this, options);
+				this._map = map;
+				this._gocO = L.latLng(0, 0);
+				this._lineX = this._getLineX();
+				this._lineY = this._getLineY();
+			},
+			_genLatLngs: function () {
+				var ret = [];
+				var tpms = this._getLatLngs(
+					this._getLatLngO(),
+					L.GeometryUtil.closestOnSegment(
+						this._map,
+						this._getLatLngO(),
+						this._getLatLngA(),
+						this._getLatLngD()
+					),
+					this.options.width
+				);
+				tpms = tpms.concat(
+					this._getLatLngs(
 						this._getLatLngO(),
 						L.GeometryUtil.closestOnSegment(
 							this._map,
 							this._getLatLngO(),
-							this._getLatLngA(),
-							this._getLatLngD()
+							this._getLatLngB(),
+							this._getLatLngC()
 						),
 						this.options.width
-					);
-					tpms = tpms.concat(
-						this._getLatLngs(
-							this._getLatLngO(),
-							L.GeometryUtil.closestOnSegment(
-								this._map,
-								this._getLatLngO(),
-								this._getLatLngB(),
-								this._getLatLngC()
-							),
-							this.options.width
-						)
-					);
-					tpms.push(this._getLatLngO());
-					tpms.forEach((element) => {
-						const dAB = L.GeometryUtil.closestOnSegment(
-							this._map,
-							element,
-							this._getLatLngA(),
-							this._getLatLngB()
-						);
-						ret = ret.concat(
-							this._getLatLngs(element, dAB, this.options.height)
-						);
-
-						const dCD = L.GeometryUtil.closestOnSegment(
-							this._map,
-							element,
-							this._getLatLngC(),
-							this._getLatLngD()
-						);
-						ret = ret.concat(
-							this._getLatLngs(element, dCD, this.options.height)
-						);
-
-						ret.push(element);
-					});
-					return ret;
-				},
-				_getLatLngs: function (latlngA, latlngB, distance) {
-					var ret = [];
-					const n = this._getNumberLatLng(latlngA, latlngB, distance);
-					var angle = L.GeometryUtil.angle(this._map, latlngA, latlngB);
-					for (var i = 1; i <= n; i++) {
-						ret.push(L.GeometryUtil.destination(latlngA, angle, i * distance));
-					}
-					return ret;
-				},
-				_getNumberLatLng: function (latlngA, latlngB, distance) {
-					return Math.floor(latlngA.distanceTo(latlngB) / distance);
-				},
-				_getLineX: function () {
-					return L.polyline([L.latLng(0, -180), L.latLng(0, 180)]);
-				},
-				_getLineY: function () {
-					return L.polyline([L.latLng(90, 0), L.latLng(-90, 0)]);
-				},
-				_getGocPhanTu: function () {
-					const angle = L.GeometryUtil.angle(
+					)
+				);
+				tpms.push(this._getLatLngO());
+				tpms.forEach((element) => {
+					const dAB = L.GeometryUtil.closestOnSegment(
 						this._map,
-						this._gocO,
-						this._map.getCenter()
-					);
-					var ret = 1;
-					if (angle >= 0 && angle <= 90) {
-						ret = 1;
-					} else if (angle > 90 && angle <= 180) {
-						ret = 2;
-					} else if (angle > 180 && angle <= 270) {
-						ret = 3;
-					} else {
-						ret = 4;
-					}
-					return ret;
-				},
-				_getDistaceCenterToLineX() {
-					const latlngs = this._lineX.getLatLngs();
-					return L.GeometryUtil.closestOnSegment(
-						this._map,
-						this._map.getCenter(),
-						latlngs[0],
-						latlngs[1]
-					).distanceTo(this._map.getCenter());
-				},
-				_getDistaceCenterToLineY() {
-					const latlngs = this._lineY.getLatLngs();
-					return L.GeometryUtil.closestOnSegment(
-						this._map,
-						this._map.getCenter(),
-						latlngs[0],
-						latlngs[1]
-					).distanceTo(this._map.getCenter());
-				},
-				_getLatLngO: function () {
-					const gocPhanTu = this._getGocPhanTu();
-					const dY = this._getDistaceCenterToLineY();
-					const dX = this._getDistaceCenterToLineX();
-					const center = this._map.getCenter();
-					var rY = dY % this.options.width;
-					var rX = dX % this.options.height;
-					if (rY !== 0 || rX !== 0) {
-						if (gocPhanTu === 1) {
-							return L.GeometryUtil.destination(
-								L.GeometryUtil.destination(center, 180, rX),
-								-90,
-								rY
-							);
-						} else if (gocPhanTu === 2) {
-							return L.GeometryUtil.destination(
-								L.GeometryUtil.destination(center, 0, rX),
-								-90,
-								rY
-							);
-						} else if (gocPhanTu === 3) {
-							return L.GeometryUtil.destination(
-								L.GeometryUtil.destination(center, 0, rX),
-								90,
-								rY
-							);
-						} else {
-							return L.GeometryUtil.destination(
-								L.GeometryUtil.destination(center, 180, rX),
-								90,
-								rY
-							);
-						}
-					}
-					return center;
-				},
-				_getDistanceToAB: function (latlng) {
-					return L.GeometryUtil.closestOnSegment(
-						this._map,
-						latlng,
+						element,
 						this._getLatLngA(),
 						this._getLatLngB()
-					).distanceTo(latlng);
-				},
-				_getDistanceToBC: function (latlng) {
-					return L.GeometryUtil.closestOnSegment(
+					);
+					ret = ret.concat(
+						this._getLatLngs(element, dAB, this.options.height)
+					);
+
+					const dCD = L.GeometryUtil.closestOnSegment(
 						this._map,
-						latlng,
-						this._getLatLngB(),
-						this._getLatLngC()
-					).distanceTo(latlng);
-				},
-				_getDistanceToCD: function (latlng) {
-					return L.GeometryUtil.closestOnSegment(
-						this._map,
-						latlng,
+						element,
 						this._getLatLngC(),
 						this._getLatLngD()
-					).distanceTo(latlng);
-				},
-				_getDistanceToDA: function (latlng) {
-					return L.GeometryUtil.closestOnSegment(
-						this._map,
-						latlng,
-						this._getLatLngD(),
-						this._getLatLngA()
-					).distanceTo(latlng);
-				},
-				_getLatLngA: function () {
-					return this._map.getBounds().getNorthWest();
-				},
-				_getLatLngB: function () {
-					return this._map.getBounds().getNorthEast();
-				},
-				_getLatLngC: function () {
-					return this._map.getBounds().getSouthEast();
-				},
-				_getLatLngD: function () {
-					return this._map.getBounds().getSouthWest();
-				},
-			});
+					);
+					ret = ret.concat(
+						this._getLatLngs(element, dCD, this.options.height)
+					);
 
-			L.guideLayer = function (map, options) {
-				return new L.GuideLayer(map, options);
-			};
-			const guideLayerT = L.guideLayer(map, { height: 15, width: 15 });
-
-			const latlngs = guideLayerT._genLatLngs();
-			latlngs.forEach((e) => {
-				guildLayers.addLayer(
-					L.circleMarker(e, { radius: 0.5, color: "black", fill: false })
-				);
-			});
-
-			map.on("move", function (e) {
-				const zoom = map.getZoom();
-				guildLayers.clearLayers();
-				console.log(guidLayerCtrl);
-				if (zoom >= 19) {
-					guidLayerCtrl.addTo(map);
-					const latlngs = guideLayerT._genLatLngs();
-					latlngs.forEach((e) => {
-						guildLayers.addLayer(
-							L.circleMarker(e, { radius: 0.5, color: "black", fill: false })
-						);
-					});
-				} else {
-					guidLayerCtrl.remove();
+					ret.push(element);
+				});
+				return ret;
+			},
+			_getLatLngs: function (latlngA, latlngB, distance) {
+				var ret = [];
+				const n = this._getNumberLatLng(latlngA, latlngB, distance);
+				var angle = L.GeometryUtil.angle(this._map, latlngA, latlngB);
+				for (var i = 1; i <= n; i++) {
+					ret.push(L.GeometryUtil.destination(latlngA, angle, i * distance));
 				}
-			});
-		</script>
-	</body>
+				return ret;
+			},
+			_getNumberLatLng: function (latlngA, latlngB, distance) {
+				return Math.floor(latlngA.distanceTo(latlngB) / distance);
+			},
+			_getLineX: function () {
+				return L.polyline([L.latLng(0, -180), L.latLng(0, 180)]);
+			},
+			_getLineY: function () {
+				return L.polyline([L.latLng(90, 0), L.latLng(-90, 0)]);
+			},
+			_getGocPhanTu: function () {
+				const angle = L.GeometryUtil.angle(
+					this._map,
+					this._gocO,
+					this._map.getCenter()
+				);
+				var ret = 1;
+				if (angle >= 0 && angle <= 90) {
+					ret = 1;
+				} else if (angle > 90 && angle <= 180) {
+					ret = 2;
+				} else if (angle > 180 && angle <= 270) {
+					ret = 3;
+				} else {
+					ret = 4;
+				}
+				return ret;
+			},
+			_getDistaceCenterToLineX() {
+				const latlngs = this._lineX.getLatLngs();
+				return L.GeometryUtil.closestOnSegment(
+					this._map,
+					this._map.getCenter(),
+					latlngs[0],
+					latlngs[1]
+				).distanceTo(this._map.getCenter());
+			},
+			_getDistaceCenterToLineY() {
+				const latlngs = this._lineY.getLatLngs();
+				return L.GeometryUtil.closestOnSegment(
+					this._map,
+					this._map.getCenter(),
+					latlngs[0],
+					latlngs[1]
+				).distanceTo(this._map.getCenter());
+			},
+			_getLatLngO: function () {
+				const gocPhanTu = this._getGocPhanTu();
+				const dY = this._getDistaceCenterToLineY();
+				const dX = this._getDistaceCenterToLineX();
+				const center = this._map.getCenter();
+				var rY = dY % this.options.width;
+				var rX = dX % this.options.height;
+				if (rY !== 0 || rX !== 0) {
+					if (gocPhanTu === 1) {
+						return L.GeometryUtil.destination(
+							L.GeometryUtil.destination(center, 180, rX),
+							-90,
+							rY
+						);
+					} else if (gocPhanTu === 2) {
+						return L.GeometryUtil.destination(
+							L.GeometryUtil.destination(center, 0, rX),
+							-90,
+							rY
+						);
+					} else if (gocPhanTu === 3) {
+						return L.GeometryUtil.destination(
+							L.GeometryUtil.destination(center, 0, rX),
+							90,
+							rY
+						);
+					} else {
+						return L.GeometryUtil.destination(
+							L.GeometryUtil.destination(center, 180, rX),
+							90,
+							rY
+						);
+					}
+				}
+				return center;
+			},
+			_getDistanceToAB: function (latlng) {
+				return L.GeometryUtil.closestOnSegment(
+					this._map,
+					latlng,
+					this._getLatLngA(),
+					this._getLatLngB()
+				).distanceTo(latlng);
+			},
+			_getDistanceToBC: function (latlng) {
+				return L.GeometryUtil.closestOnSegment(
+					this._map,
+					latlng,
+					this._getLatLngB(),
+					this._getLatLngC()
+				).distanceTo(latlng);
+			},
+			_getDistanceToCD: function (latlng) {
+				return L.GeometryUtil.closestOnSegment(
+					this._map,
+					latlng,
+					this._getLatLngC(),
+					this._getLatLngD()
+				).distanceTo(latlng);
+			},
+			_getDistanceToDA: function (latlng) {
+				return L.GeometryUtil.closestOnSegment(
+					this._map,
+					latlng,
+					this._getLatLngD(),
+					this._getLatLngA()
+				).distanceTo(latlng);
+			},
+			_getLatLngA: function () {
+				return this._map.getBounds().getNorthWest();
+			},
+			_getLatLngB: function () {
+				return this._map.getBounds().getNorthEast();
+			},
+			_getLatLngC: function () {
+				return this._map.getBounds().getSouthEast();
+			},
+			_getLatLngD: function () {
+				return this._map.getBounds().getSouthWest();
+			},
+		});
+
+		L.guideLayer = function (map, options) {
+			return new L.GuideLayer(map, options);
+		};
+		const guideLayerT = L.guideLayer(map, { height: 50, width: 50 });
+
+		const latlngs = guideLayerT._genLatLngs();
+		latlngs.forEach((e) => {
+			guildLayers.addLayer(
+				L.circleMarker(e, { radius: 0.5, color: "black", fill: false, weight: 1, bubblingMouseEvents: false })
+			);
+		});
+
+		map.on("move", function (e) {
+			const zoom = map.getZoom();
+			guildLayers.clearLayers();
+			if (zoom >= 17) {
+				guidLayerCtrl.addTo(map);
+				const latlngs = guideLayerT._genLatLngs();
+				latlngs.forEach((e) => {
+					guildLayers.addLayer(
+						L.circleMarker(e, { radius: 0.5, color: "black", fill: false, weight: 1, bubblingMouseEvents: false })
+					);
+				});
+			} else {
+				guidLayerCtrl.remove();
+			}
+		});
+
+		// var marker = L.marker(L.latLng(0, 0)).addTo(map);
+		// marker.snapediting = new L.Handler.MarkerSnap(map, marker);
+		// marker.snapediting.addGuideLayer(guildLayers);
+		// marker.snapediting.enable();
+
+	</script>
+</body>
+
 </html>

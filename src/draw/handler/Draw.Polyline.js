@@ -41,7 +41,8 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		showLength: true, // Whether to display distance in the tooltip
 		zIndexOffset: 2000, // This should be > than the highest z-index any map layers
 		factor: 1, // To change distance calculation
-		maxPoints: 0, // Once this number of points are placed, finish shape
+		maxPoints: 0, // Once this number of points are placed, finish shape,
+		isEditPoly: true,
 	},
 
 	// @method initialize(): void
@@ -325,7 +326,9 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 				Math.abs(dragCheckDistance) <
 				9 * (window.devicePixelRatio || 1)
 			) {
-				this.addVertex(e.latlng);
+				// this.addVertex(e.latlng);
+
+				this.addVertex(this._mouseMarker._latlng);
 			}
 			this._enableNewMarkers(); // after a short pause, enable new markers
 		}

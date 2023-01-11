@@ -87,7 +87,6 @@
 						}
 					}
 				}
-
 				return true;
 			}
 
@@ -409,8 +408,8 @@
 	L.Draw.Feature.include(L.Draw.Feature.SnapMixin);
 	L.Draw.Feature.addInitHook("_snap_initialize");
 
-	L.Draw.Polyline.include(L.Draw.Feature.SnapMixin);
-	L.Draw.Polyline.addInitHook("_snap_initialize");
+	L.Draw.DuongDay.include(L.Draw.Feature.SnapMixin);
+	L.Draw.DuongDay.addInitHook("_snap_initialize");
 
 	L.Draw.Role.include(L.Draw.Feature.SnapMixin);
 	L.Draw.Role.addInitHook("_snap_initialize");

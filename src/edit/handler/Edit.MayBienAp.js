@@ -4,9 +4,9 @@ L.Edit = L.Edit || {};
  * @aka Edit.Circle
  * @inherits L.Edit.SimpleShape
  */
-L.Edit.MayBienAp = L.Edit.SimpleShape.extend({
+L.Edit.MayBienAp = L.Edit.SimpleShapeSnap.extend({
 	initialize: function (shape, options) {
-		L.Edit.SimpleShape.prototype.initialize.call(this, shape, options);
+		L.Edit.SimpleShapeSnap.prototype.initialize.call(this, shape, options);
 	},
 
 	_createMoveMarker: function () {
@@ -58,7 +58,7 @@ L.MayBienAp.addInitHook(function () {
 	}
 
 	if (L.Edit.MayBienAp) {
-		this.editing = new L.Edit.MayBienAp(this);
+		this.editing = new L.Edit.MayBienAp(this, this.options);
 
 		if (this.options.editable) {
 			this.editing.enable();

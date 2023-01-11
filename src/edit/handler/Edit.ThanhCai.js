@@ -4,9 +4,9 @@ L.Edit = L.Edit || {};
  * @aka Edit.Circle
  * @inherits L.Edit.SimpleShape
  */
-L.Edit.ThanhCai = L.Edit.SimpleShape.extend({
+L.Edit.ThanhCai = L.Edit.SimpleShapeSnap.extend({
 	initialize: function (shape, options) {
-		L.Edit.SimpleShape.prototype.initialize.call(this, shape, options);
+		L.Edit.SimpleShapeSnap.prototype.initialize.call(this, shape, options);
 	},
 
 	_createMoveMarker: function () {
@@ -58,7 +58,7 @@ L.ThanhCai.addInitHook(function () {
 	}
 
 	if (L.Edit.ThanhCai) {
-		this.editing = new L.Edit.ThanhCai(this);
+		this.editing = new L.Edit.ThanhCai(this, this.options);
 
 		if (this.options.editable) {
 			this.editing.enable();
