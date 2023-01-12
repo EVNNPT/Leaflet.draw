@@ -60,6 +60,22 @@ L.Renderer.include({
 	},
 });
 
+L.Layer.include({
+	_processAngle: function (angle) {
+		var ret = 0;
+		if (angle >= 0 && angle <= 90) {
+			ret = 0;
+		} else if (angle > 90 && angle <= 180) {
+			ret = 90;
+		} else if (angle > 180 && angle <= 270) {
+			ret = 180;
+		} else {
+			ret = 270;
+		}
+		return ret;
+	},
+});
+
 //#region L.DuongDay
 L.DuongDay = L.Polyline.extend({
 	initialize: function (latlngs, options) {
@@ -250,6 +266,17 @@ L.MayBienAp = L.Path.extend({
 		this._updateBounds();
 	},
 
+	getLayerSnap: function () {
+		return L.layerGroup([
+			L.circleMarker(this._getLatLngA(), { opacity: 0, weight: 0.5 }),
+			L.circleMarker(this._getLatLngB(), { opacity: 0, weight: 0.5 }),
+			L.circleMarker(this._getLatLngC(), { opacity: 0, weight: 0.5 }),
+			L.circleMarker(this._getLatLngD(), { opacity: 0, weight: 0.5 }),
+			L.circleMarker(this._getLatLngE(), { opacity: 0, weight: 0.5 }),
+			L.circleMarker(this._getLatLngF(), { opacity: 0, weight: 0.5 }),
+		]);
+	},
+
 	_updateBounds: function () {
 		const bounds = this.getBounds();
 		this._pxBounds = L.bounds(
@@ -369,8 +396,8 @@ L.ThanhCai = L.Polyline.extend({
 		);
 		return [diemA, diemB];
 	},
-	getLatLngSnaps: function () {
-		return this.getLatLngs();
+	getLayerSnap: function () {
+		return L.polyline(this.getLatLngs(), { opacity: 0 });
 	},
 	getRotateMarker: function () {
 		const centerPoint = this.getCenterCus();
@@ -507,21 +534,24 @@ L.Role = L.Polyline.extend({
 		this.options.gocXoay = angle;
 		this.setLatLngs(this._roleLatLngs(centerPoint));
 	},
-	getLatLngSnaps: function () {
+	getLayerSnap: function () {
 		const latlngs = this.getLatLngs();
 		const pA = latlngs[0];
 		const pB = latlngs[1];
-		const pAD = L.GeometryUtil.destination(
+		const pMAD = L.GeometryUtil.destination(
 			pA,
-			-this.options.gocXoay - 90,
+			this.options.gocXoay + 180,
 			this.options.chieuRong / 2
 		);
-		const pBC = L.GeometryUtil.destination(
+		const pMBC = L.GeometryUtil.destination(
 			pB,
-			this.options.gocXoay + 90,
-			this.options.chieuDai / 2
+			this.options.gocXoay + 180,
+			this.options.chieuRong / 2
 		);
-		return [pAD, pBC];
+		return L.layerGroup([
+			L.circleMarker(pMAD, { opacity: 0, weight: 0.5 }),
+			L.circleMarker(pMBC, { opacity: 0, weight: 0.5 }),
+		]);
 	},
 	getCenter: function () {
 		return this._centerPoint;
@@ -531,4 +561,228 @@ L.Role = L.Polyline.extend({
 L.role = function (latlng, options) {
 	return new L.Role(latlng, options);
 };
+//#endregion
+
+//#region Draw GuidLayer
+
+L.GuideLayer = L.Class.extend({
+	options: {
+		width: 10,
+		height: 10,
+	},
+	initialize: function (map, options) {
+		L.setOptions(this, options);
+		this._map = map;
+		this._gocO = L.latLng(0, 0);
+		this._lineX = this._getLineX();
+		this._lineY = this._getLineY();
+		this._drawGuidLayer();
+		this._map.on(
+			"move",
+			function () {
+				this.options.layer.clearLayers();
+				const zoom = this._map.getZoom();
+				if (zoom >= this.options.zoom) {
+					this._drawGuidLayer();
+				}
+			},
+			this
+		);
+	},
+	_drawGuidLayer: function () {
+		var ret = [];
+		var tpms = this._getLatLngs(
+			this._getLatLngO(),
+			L.GeometryUtil.closestOnSegment(
+				this._map,
+				this._getLatLngO(),
+				this._getLatLngA(),
+				this._getLatLngD()
+			),
+			this.options.width
+		);
+		tpms = tpms.concat(
+			this._getLatLngs(
+				this._getLatLngO(),
+				L.GeometryUtil.closestOnSegment(
+					this._map,
+					this._getLatLngO(),
+					this._getLatLngB(),
+					this._getLatLngC()
+				),
+				this.options.width
+			)
+		);
+		tpms.push(this._getLatLngO());
+		tpms.forEach((element) => {
+			const dAB = L.GeometryUtil.closestOnSegment(
+				this._map,
+				element,
+				this._getLatLngA(),
+				this._getLatLngB()
+			);
+			ret = ret.concat(this._getLatLngs(element, dAB, this.options.height));
+
+			const dCD = L.GeometryUtil.closestOnSegment(
+				this._map,
+				element,
+				this._getLatLngC(),
+				this._getLatLngD()
+			);
+			ret = ret.concat(this._getLatLngs(element, dCD, this.options.height));
+
+			ret.push(element);
+		});
+		ret.forEach((e) => {
+			this.options.layer.addLayer(
+				L.circleMarker(e, {
+					radius: 0.5,
+					color: "black",
+					fill: false,
+					weight: 1,
+					bubblingMouseEvents: false,
+				})
+			);
+		});
+	},
+	_getLatLngs: function (latlngA, latlngB, distance) {
+		var ret = [];
+		const n = this._getNumberLatLng(latlngA, latlngB, distance);
+		var angle = L.GeometryUtil.angle(this._map, latlngA, latlngB);
+		for (var i = 1; i <= n; i++) {
+			ret.push(L.GeometryUtil.destination(latlngA, angle, i * distance));
+		}
+		return ret;
+	},
+	_getNumberLatLng: function (latlngA, latlngB, distance) {
+		return Math.floor(latlngA.distanceTo(latlngB) / distance);
+	},
+	_getLineX: function () {
+		return L.polyline([L.latLng(0, -180), L.latLng(0, 180)]);
+	},
+	_getLineY: function () {
+		return L.polyline([L.latLng(90, 0), L.latLng(-90, 0)]);
+	},
+	_getGocPhanTu: function () {
+		const angle = L.GeometryUtil.angle(
+			this._map,
+			this._gocO,
+			this._map.getCenter()
+		);
+		var ret = 1;
+		if (angle >= 0 && angle <= 90) {
+			ret = 1;
+		} else if (angle > 90 && angle <= 180) {
+			ret = 2;
+		} else if (angle > 180 && angle <= 270) {
+			ret = 3;
+		} else {
+			ret = 4;
+		}
+		return ret;
+	},
+	_getDistaceCenterToLineX() {
+		const latlngs = this._lineX.getLatLngs();
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			this._map.getCenter(),
+			latlngs[0],
+			latlngs[1]
+		).distanceTo(this._map.getCenter());
+	},
+	_getDistaceCenterToLineY() {
+		const latlngs = this._lineY.getLatLngs();
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			this._map.getCenter(),
+			latlngs[0],
+			latlngs[1]
+		).distanceTo(this._map.getCenter());
+	},
+	_getLatLngO: function () {
+		const gocPhanTu = this._getGocPhanTu();
+		const dY = this._getDistaceCenterToLineY();
+		const dX = this._getDistaceCenterToLineX();
+		const center = this._map.getCenter();
+		var rY = dY % this.options.width;
+		var rX = dX % this.options.height;
+		if (rY !== 0 || rX !== 0) {
+			if (gocPhanTu === 1) {
+				return L.GeometryUtil.destination(
+					L.GeometryUtil.destination(center, 180, rX),
+					-90,
+					rY
+				);
+			} else if (gocPhanTu === 2) {
+				return L.GeometryUtil.destination(
+					L.GeometryUtil.destination(center, 0, rX),
+					-90,
+					rY
+				);
+			} else if (gocPhanTu === 3) {
+				return L.GeometryUtil.destination(
+					L.GeometryUtil.destination(center, 0, rX),
+					90,
+					rY
+				);
+			} else {
+				return L.GeometryUtil.destination(
+					L.GeometryUtil.destination(center, 180, rX),
+					90,
+					rY
+				);
+			}
+		}
+		return center;
+	},
+	_getDistanceToAB: function (latlng) {
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			latlng,
+			this._getLatLngA(),
+			this._getLatLngB()
+		).distanceTo(latlng);
+	},
+	_getDistanceToBC: function (latlng) {
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			latlng,
+			this._getLatLngB(),
+			this._getLatLngC()
+		).distanceTo(latlng);
+	},
+	_getDistanceToCD: function (latlng) {
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			latlng,
+			this._getLatLngC(),
+			this._getLatLngD()
+		).distanceTo(latlng);
+	},
+	_getDistanceToDA: function (latlng) {
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			latlng,
+			this._getLatLngD(),
+			this._getLatLngA()
+		).distanceTo(latlng);
+	},
+	_getLatLngA: function () {
+		return this._map.getBounds().getNorthWest();
+	},
+	_getLatLngB: function () {
+		return this._map.getBounds().getNorthEast();
+	},
+	_getLatLngC: function () {
+		return this._map.getBounds().getSouthEast();
+	},
+	_getLatLngD: function () {
+		return this._map.getBounds().getSouthWest();
+	},
+});
+
+L.guideLayer = function (map, options) {
+	return new L.GuideLayer(map, options);
+};
+
 //#endregion
