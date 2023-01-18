@@ -1,5 +1,5 @@
 /*
- Leaflet.draw 1.0.4+bba2081, a plugin that adds drawing and editing tools to Leaflet powered maps.
+ Leaflet.draw 1.0.4+5e7be29, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
 
  https://github.com/Leaflet/Leaflet.draw
@@ -66,6 +66,34 @@
 		this._setPath(layer, d);
 	},
 });
+
+L.Layer.include({
+	_processAngle: function (angle) {
+		var ret = 0;
+		if (angle >= 0 && angle <= 90) {
+			ret = 0;
+		} else if (angle > 90 && angle <= 180) {
+			ret = 90;
+		} else if (angle > 180 && angle <= 270) {
+			ret = 180;
+		} else {
+			ret = 270;
+		}
+		return ret;
+	},
+});
+
+//#region L.DuongDay
+L.DuongDay = L.Polyline.extend({
+	initialize: function (latlngs, options) {
+		L.Polyline.prototype.initialize.call(this, latlngs, options);
+	},
+});
+
+L.duongDay = function (latlngs, options) {
+	return new L.DuongDay(latlngs, options);
+};
+//#endregion
 
 //#region L.MayBienAp
 L.MayBienAp = L.Path.extend({
@@ -245,6 +273,17 @@ L.MayBienAp = L.Path.extend({
 		this._updateBounds();
 	},
 
+	getLayerSnap: function () {
+		return L.layerGroup([
+			L.circleMarker(this._getLatLngA(), { opacity: 0, weight: 0.5 }),
+			L.circleMarker(this._getLatLngB(), { opacity: 0, weight: 0.5 }),
+			L.circleMarker(this._getLatLngC(), { opacity: 0, weight: 0.5 }),
+			L.circleMarker(this._getLatLngD(), { opacity: 0, weight: 0.5 }),
+			L.circleMarker(this._getLatLngE(), { opacity: 0, weight: 0.5 }),
+			L.circleMarker(this._getLatLngF(), { opacity: 0, weight: 0.5 }),
+		]);
+	},
+
 	_updateBounds: function () {
 		const bounds = this.getBounds();
 		this._pxBounds = L.bounds(
@@ -364,8 +403,8 @@ L.ThanhCai = L.Polyline.extend({
 		);
 		return [diemA, diemB];
 	},
-	getLatLngSnaps: function () {
-		return this.getLatLngs();
+	getLayerSnap: function () {
+		return L.polyline(this.getLatLngs(), { opacity: 0 });
 	},
 	getRotateMarker: function () {
 		const centerPoint = this.getCenterCus();
@@ -413,6 +452,7 @@ L.Role = L.Polyline.extend({
 		gocXoay: 0,
 	},
 	initialize: function (centerPoint, options) {
+		this._centerPoint = centerPoint;
 		L.setOptions(this, options);
 		const latlngs = this._roleLatLngs(centerPoint);
 		L.Polyline.prototype.initialize.call(this, latlngs, options);
@@ -501,27 +541,257 @@ L.Role = L.Polyline.extend({
 		this.options.gocXoay = angle;
 		this.setLatLngs(this._roleLatLngs(centerPoint));
 	},
-	getLatLngSnaps: function () {
+	getLayerSnap: function () {
 		const latlngs = this.getLatLngs();
 		const pA = latlngs[0];
 		const pB = latlngs[1];
-		const pAD = L.GeometryUtil.destination(
+		const pMAD = L.GeometryUtil.destination(
 			pA,
-			-this.options.gocXoay - 90,
+			this.options.gocXoay + 180,
 			this.options.chieuRong / 2
 		);
-		const pBC = L.GeometryUtil.destination(
+		const pMBC = L.GeometryUtil.destination(
 			pB,
-			this.options.gocXoay + 90,
-			this.options.chieuDai / 2
+			this.options.gocXoay + 180,
+			this.options.chieuRong / 2
 		);
-		return [pAD, pBC];
+		return L.layerGroup([
+			L.circleMarker(pMAD, { opacity: 0, weight: 0.5 }),
+			L.circleMarker(pMBC, { opacity: 0, weight: 0.5 }),
+		]);
+	},
+	getCenter: function () {
+		return this._centerPoint;
 	},
 });
 
 L.role = function (latlng, options) {
 	return new L.Role(latlng, options);
 };
+//#endregion
+
+//#region Draw GuidLayer
+
+L.GuideLayer = L.Class.extend({
+	options: {
+		width: 10,
+		height: 10,
+	},
+	initialize: function (map, options) {
+		L.setOptions(this, options);
+		this._map = map;
+		this._gocO = L.latLng(0, 0);
+		this._lineX = this._getLineX();
+		this._lineY = this._getLineY();
+		this._drawGuidLayer();
+		this._map.on(
+			"move",
+			function () {
+				this.options.layer.clearLayers();
+				const zoom = this._map.getZoom();
+				if (zoom >= this.options.zoom) {
+					this._drawGuidLayer();
+				}
+			},
+			this
+		);
+	},
+	_drawGuidLayer: function () {
+		var ret = [];
+		var tpms = this._getLatLngs(
+			this._getLatLngO(),
+			L.GeometryUtil.closestOnSegment(
+				this._map,
+				this._getLatLngO(),
+				this._getLatLngA(),
+				this._getLatLngD()
+			),
+			this.options.width
+		);
+		tpms = tpms.concat(
+			this._getLatLngs(
+				this._getLatLngO(),
+				L.GeometryUtil.closestOnSegment(
+					this._map,
+					this._getLatLngO(),
+					this._getLatLngB(),
+					this._getLatLngC()
+				),
+				this.options.width
+			)
+		);
+		tpms.push(this._getLatLngO());
+		tpms.forEach((element) => {
+			const dAB = L.GeometryUtil.closestOnSegment(
+				this._map,
+				element,
+				this._getLatLngA(),
+				this._getLatLngB()
+			);
+			ret = ret.concat(this._getLatLngs(element, dAB, this.options.height));
+
+			const dCD = L.GeometryUtil.closestOnSegment(
+				this._map,
+				element,
+				this._getLatLngC(),
+				this._getLatLngD()
+			);
+			ret = ret.concat(this._getLatLngs(element, dCD, this.options.height));
+
+			ret.push(element);
+		});
+		ret.forEach((e) => {
+			this.options.layer.addLayer(
+				L.circleMarker(e, {
+					radius: 0.5,
+					color: "black",
+					fill: false,
+					weight: 1,
+					bubblingMouseEvents: false,
+				})
+			);
+		});
+	},
+	_getLatLngs: function (latlngA, latlngB, distance) {
+		var ret = [];
+		const n = this._getNumberLatLng(latlngA, latlngB, distance);
+		var angle = L.GeometryUtil.angle(this._map, latlngA, latlngB);
+		for (var i = 1; i <= n; i++) {
+			ret.push(L.GeometryUtil.destination(latlngA, angle, i * distance));
+		}
+		return ret;
+	},
+	_getNumberLatLng: function (latlngA, latlngB, distance) {
+		return Math.floor(latlngA.distanceTo(latlngB) / distance);
+	},
+	_getLineX: function () {
+		return L.polyline([L.latLng(0, -180), L.latLng(0, 180)]);
+	},
+	_getLineY: function () {
+		return L.polyline([L.latLng(90, 0), L.latLng(-90, 0)]);
+	},
+	_getGocPhanTu: function () {
+		const angle = L.GeometryUtil.angle(
+			this._map,
+			this._gocO,
+			this._map.getCenter()
+		);
+		var ret = 1;
+		if (angle >= 0 && angle <= 90) {
+			ret = 1;
+		} else if (angle > 90 && angle <= 180) {
+			ret = 2;
+		} else if (angle > 180 && angle <= 270) {
+			ret = 3;
+		} else {
+			ret = 4;
+		}
+		return ret;
+	},
+	_getDistaceCenterToLineX() {
+		const latlngs = this._lineX.getLatLngs();
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			this._map.getCenter(),
+			latlngs[0],
+			latlngs[1]
+		).distanceTo(this._map.getCenter());
+	},
+	_getDistaceCenterToLineY() {
+		const latlngs = this._lineY.getLatLngs();
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			this._map.getCenter(),
+			latlngs[0],
+			latlngs[1]
+		).distanceTo(this._map.getCenter());
+	},
+	_getLatLngO: function () {
+		const gocPhanTu = this._getGocPhanTu();
+		const dY = this._getDistaceCenterToLineY();
+		const dX = this._getDistaceCenterToLineX();
+		const center = this._map.getCenter();
+		var rY = dY % this.options.width;
+		var rX = dX % this.options.height;
+		if (rY !== 0 || rX !== 0) {
+			if (gocPhanTu === 1) {
+				return L.GeometryUtil.destination(
+					L.GeometryUtil.destination(center, 180, rX),
+					-90,
+					rY
+				);
+			} else if (gocPhanTu === 2) {
+				return L.GeometryUtil.destination(
+					L.GeometryUtil.destination(center, 0, rX),
+					-90,
+					rY
+				);
+			} else if (gocPhanTu === 3) {
+				return L.GeometryUtil.destination(
+					L.GeometryUtil.destination(center, 0, rX),
+					90,
+					rY
+				);
+			} else {
+				return L.GeometryUtil.destination(
+					L.GeometryUtil.destination(center, 180, rX),
+					90,
+					rY
+				);
+			}
+		}
+		return center;
+	},
+	_getDistanceToAB: function (latlng) {
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			latlng,
+			this._getLatLngA(),
+			this._getLatLngB()
+		).distanceTo(latlng);
+	},
+	_getDistanceToBC: function (latlng) {
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			latlng,
+			this._getLatLngB(),
+			this._getLatLngC()
+		).distanceTo(latlng);
+	},
+	_getDistanceToCD: function (latlng) {
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			latlng,
+			this._getLatLngC(),
+			this._getLatLngD()
+		).distanceTo(latlng);
+	},
+	_getDistanceToDA: function (latlng) {
+		return L.GeometryUtil.closestOnSegment(
+			this._map,
+			latlng,
+			this._getLatLngD(),
+			this._getLatLngA()
+		).distanceTo(latlng);
+	},
+	_getLatLngA: function () {
+		return this._map.getBounds().getNorthWest();
+	},
+	_getLatLngB: function () {
+		return this._map.getBounds().getNorthEast();
+	},
+	_getLatLngC: function () {
+		return this._map.getBounds().getSouthEast();
+	},
+	_getLatLngD: function () {
+		return this._map.getBounds().getSouthWest();
+	},
+});
+
+L.guideLayer = function (map, options) {
+	return new L.GuideLayer(map, options);
+};
+
 //#endregion
 
 
@@ -876,6 +1146,15 @@ L.Draw.Event.EDITRESIZE = "draw:editresize";
 L.Draw.Event.EDITROTATE = "draw:editrotate";
 
 /**
+ * @event draw:createmarker: ILayer
+ *
+ * Layer that was just moved.
+ *
+ * Triggered as the user rotate a object.
+ */
+L.Draw.Event.CREATEMARKER = "draw:createmarker";
+
+/**
  * @event draw:editvertex: LayerGroup
  *
  * List of all layers just being edited from the map.
@@ -1048,7 +1327,7 @@ L.Draw.Feature = L.Handler.extend({
  */
 L.Draw.Polyline = L.Draw.Feature.extend({
 	statics: {
-		TYPE: 'polyline'
+		TYPE: "polyline",
 	},
 
 	Poly: L.Polyline,
@@ -1057,26 +1336,26 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		allowIntersection: true,
 		repeatMode: false,
 		drawError: {
-			color: '#b00b00',
-			timeout: 2500
+			color: "#b00b00",
+			timeout: 2500,
 		},
 		icon: new L.DivIcon({
 			iconSize: new L.Point(8, 8),
-			className: 'leaflet-div-icon leaflet-editing-icon'
+			className: "leaflet-div-icon leaflet-editing-icon",
 		}),
 		touchIcon: new L.DivIcon({
 			iconSize: new L.Point(20, 20),
-			className: 'leaflet-div-icon leaflet-editing-icon leaflet-touch-icon'
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-touch-icon",
 		}),
 		guidelineDistance: 20,
 		maxGuideLineLength: 4000,
 		shapeOptions: {
 			stroke: true,
-			color: '#3388ff',
+			color: "#3388ff",
 			weight: 4,
 			opacity: 0.5,
 			fill: false,
-			clickable: true
+			clickable: true,
 		},
 		metric: true, // Whether to use the metric measurement system or imperial
 		feet: true, // When not metric, to use feet instead of yards for display.
@@ -1084,7 +1363,8 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		showLength: true, // Whether to display distance in the tooltip
 		zIndexOffset: 2000, // This should be > than the highest z-index any map layers
 		factor: 1, // To change distance calculation
-		maxPoints: 0 // Once this number of points are placed, finish shape
+		maxPoints: 0, // Once this number of points are placed, finish shape,
+		isEditPoly: true,
 	},
 
 	// @method initialize(): void
@@ -1099,7 +1379,11 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 		// Merge default drawError options with custom options
 		if (options && options.drawError) {
-			options.drawError = L.Util.extend({}, this.options.drawError, options.drawError);
+			options.drawError = L.Util.extend(
+				{},
+				this.options.drawError,
+				options.drawError
+			);
 		}
 
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
@@ -1130,29 +1414,28 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			if (!this._mouseMarker) {
 				this._mouseMarker = L.marker(this._map.getCenter(), {
 					icon: L.divIcon({
-						className: 'leaflet-mouse-marker',
+						className: "leaflet-mouse-marker",
 						iconAnchor: [20, 20],
-						iconSize: [40, 40]
+						iconSize: [40, 40],
 					}),
 					opacity: 0,
-					zIndexOffset: this.options.zIndexOffset
+					zIndexOffset: this.options.zIndexOffset,
 				});
 			}
 
 			this._mouseMarker
-				.on('mouseout', this._onMouseOut, this)
-				.on('mousemove', this._onMouseMove, this) // Necessary to prevent 0.8 stutter
-				.on('mousedown', this._onMouseDown, this)
-				.on('mouseup', this._onMouseUp, this) // Necessary for 0.8 compatibility
+				.on("mouseout", this._onMouseOut, this)
+				.on("mousemove", this._onMouseMove, this) // Necessary to prevent 0.8 stutter
+				.on("mousedown", this._onMouseDown, this)
+				.on("mouseup", this._onMouseUp, this) // Necessary for 0.8 compatibility
 				.addTo(this._map);
 
 			this._map
-				.on('mouseup', this._onMouseUp, this) // Necessary for 0.7 compatibility
-				.on('mousemove', this._onMouseMove, this)
-				.on('zoomlevelschange', this._onZoomEnd, this)
-				.on('touchstart', this._onTouch, this)
-				.on('zoomend', this._onZoomEnd, this);
-
+				.on("mouseup", this._onMouseUp, this) // Necessary for 0.7 compatibility
+				.on("mousemove", this._onMouseMove, this)
+				.on("zoomlevelschange", this._onZoomEnd, this)
+				.on("touchstart", this._onTouch, this)
+				.on("zoomend", this._onZoomEnd, this);
 		}
 	},
 
@@ -1174,10 +1457,10 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		delete this._poly;
 
 		this._mouseMarker
-			.off('mousedown', this._onMouseDown, this)
-			.off('mouseout', this._onMouseOut, this)
-			.off('mouseup', this._onMouseUp, this)
-			.off('mousemove', this._onMouseMove, this);
+			.off("mousedown", this._onMouseDown, this)
+			.off("mouseout", this._onMouseOut, this)
+			.off("mouseup", this._onMouseUp, this)
+			.off("mousemove", this._onMouseMove, this);
 		this._map.removeLayer(this._mouseMarker);
 		delete this._mouseMarker;
 
@@ -1185,12 +1468,12 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		this._clearGuides();
 
 		this._map
-			.off('mouseup', this._onMouseUp, this)
-			.off('mousemove', this._onMouseMove, this)
-			.off('zoomlevelschange', this._onZoomEnd, this)
-			.off('zoomend', this._onZoomEnd, this)
-			.off('touchstart', this._onTouch, this)
-			.off('click', this._onTouch, this);
+			.off("mouseup", this._onMouseUp, this)
+			.off("mousemove", this._onMouseMove, this)
+			.off("zoomlevelschange", this._onZoomEnd, this)
+			.off("zoomend", this._onZoomEnd, this)
+			.off("touchstart", this._onTouch, this)
+			.off("click", this._onTouch, this);
 	},
 
 	// @method deleteLastVertex(): void
@@ -1221,11 +1504,14 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	addVertex: function (latlng) {
 		var markersLength = this._markers.length;
 		// markersLength must be greater than or equal to 2 before intersections can occur
-		if (markersLength >= 2 && !this.options.allowIntersection && this._poly.newLatLngIntersects(latlng)) {
+		if (
+			markersLength >= 2 &&
+			!this.options.allowIntersection &&
+			this._poly.newLatLngIntersects(latlng)
+		) {
 			this._showErrorTooltip();
 			return;
-		}
-		else if (this._errorShown) {
+		} else if (this._errorShown) {
 			this._hideErrorTooltip();
 		}
 
@@ -1256,10 +1542,17 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	},
 
 	_finishShape: function () {
-		var latlngs = this._poly._defaultShape ? this._poly._defaultShape() : this._poly.getLatLngs();
-		var intersects = this._poly.newLatLngIntersects(latlngs[latlngs.length - 1]);
+		var latlngs = this._poly._defaultShape
+			? this._poly._defaultShape()
+			: this._poly.getLatLngs();
+		var intersects = this._poly.newLatLngIntersects(
+			latlngs[latlngs.length - 1]
+		);
 
-		if ((!this.options.allowIntersection && intersects) || !this._shapeIsValid()) {
+		if (
+			(!this.options.allowIntersection && intersects) ||
+			!this._shapeIsValid()
+		) {
 			this._showErrorTooltip();
 			return;
 		}
@@ -1303,7 +1596,7 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	},
 
 	_vertexChanged: function (latlng, added) {
-		this._map.fire(L.Draw.Event.DRAWVERTEX, {layers: this._markerGroup});
+		this._map.fire(L.Draw.Event.DRAWVERTEX, { layers: this._markerGroup });
 		this._updateFinishHandler();
 
 		this._updateRunningMeasure(latlng, added);
@@ -1339,16 +1632,25 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 	_endPoint: function (clientX, clientY, e) {
 		if (this._mouseDownOrigin) {
-			var dragCheckDistance = L.point(clientX, clientY)
-				.distanceTo(this._mouseDownOrigin);
+			var dragCheckDistance = L.point(clientX, clientY).distanceTo(
+				this._mouseDownOrigin
+			);
 			var lastPtDistance = this._calculateFinishDistance(e.latlng);
-			if (this.options.maxPoints > 1 && this.options.maxPoints == this._markers.length + 1) {
+			if (
+				this.options.maxPoints > 1 &&
+				this.options.maxPoints == this._markers.length + 1
+			) {
 				this.addVertex(e.latlng);
 				this._finishShape();
 			} else if (lastPtDistance < 10 && L.Browser.touch) {
 				this._finishShape();
-			} else if (Math.abs(dragCheckDistance) < 9 * (window.devicePixelRatio || 1)) {
-				this.addVertex(e.latlng);
+			} else if (
+				Math.abs(dragCheckDistance) <
+				9 * (window.devicePixelRatio || 1)
+			) {
+				// this.addVertex(e.latlng);
+
+				this.addVertex(this._mouseMarker._latlng);
 			}
 			this._enableNewMarkers(); // after a short pause, enable new markers
 		}
@@ -1361,7 +1663,13 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		var originalEvent = e.originalEvent;
 		var clientX;
 		var clientY;
-		if (originalEvent.touches && originalEvent.touches[0] && !this._clickHandled && !this._touchHandled && !this._disableMarkers) {
+		if (
+			originalEvent.touches &&
+			originalEvent.touches[0] &&
+			!this._clickHandled &&
+			!this._touchHandled &&
+			!this._disableMarkers
+		) {
 			clientX = originalEvent.touches[0].clientX;
 			clientY = originalEvent.touches[0].clientY;
 			this._disableNewMarkers();
@@ -1394,12 +1702,16 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			} else {
 				return Infinity;
 			}
-			var lastMarkerPoint = this._map.latLngToContainerPoint(finishMarker.getLatLng()),
+			var lastMarkerPoint = this._map.latLngToContainerPoint(
+					finishMarker.getLatLng()
+				),
 				potentialMarker = new L.Marker(potentialLatLng, {
 					icon: this.options.icon,
-					zIndexOffset: this.options.zIndexOffset * 2
+					zIndexOffset: this.options.zIndexOffset * 2,
 				});
-			var potentialMarkerPint = this._map.latLngToContainerPoint(potentialMarker.getLatLng());
+			var potentialMarkerPint = this._map.latLngToContainerPoint(
+				potentialMarker.getLatLng()
+			);
 			lastPtDistance = lastMarkerPoint.distanceTo(potentialMarkerPint);
 		} else {
 			lastPtDistance = Infinity;
@@ -1411,19 +1723,19 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		var markerCount = this._markers.length;
 		// The last marker should have a click handler to close the polyline
 		if (markerCount > 1) {
-			this._markers[markerCount - 1].on('click', this._finishShape, this);
+			this._markers[markerCount - 1].on("click", this._finishShape, this);
 		}
 
 		// Remove the old marker click handler (as only the last point should close the polyline)
 		if (markerCount > 2) {
-			this._markers[markerCount - 2].off('click', this._finishShape, this);
+			this._markers[markerCount - 2].off("click", this._finishShape, this);
 		}
 	},
 
 	_createMarker: function (latlng) {
 		var marker = new L.Marker(latlng, {
 			icon: this.options.icon,
-			zIndexOffset: this.options.zIndexOffset * 2
+			zIndexOffset: this.options.zIndexOffset * 2,
 		});
 
 		this._markerGroup.addLayer(marker);
@@ -1440,7 +1752,9 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 			// draw the guide line
 			this._clearGuides();
 			this._drawGuide(
-				this._map.latLngToLayerPoint(this._markers[markerCount - 1].getLatLng()),
+				this._map.latLngToLayerPoint(
+					this._markers[markerCount - 1].getLatLng()
+				),
 				newPos
 			);
 		}
@@ -1459,18 +1773,29 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 	},
 
 	_drawGuide: function (pointA, pointB) {
-		var length = Math.floor(Math.sqrt(Math.pow((pointB.x - pointA.x), 2) + Math.pow((pointB.y - pointA.y), 2))),
+		var length = Math.floor(
+				Math.sqrt(
+					Math.pow(pointB.x - pointA.x, 2) + Math.pow(pointB.y - pointA.y, 2)
+				)
+			),
 			guidelineDistance = this.options.guidelineDistance,
 			maxGuideLineLength = this.options.maxGuideLineLength,
 			// Only draw a guideline with a max length
-			i = length > maxGuideLineLength ? length - maxGuideLineLength : guidelineDistance,
+			i =
+				length > maxGuideLineLength
+					? length - maxGuideLineLength
+					: guidelineDistance,
 			fraction,
 			dashPoint,
 			dash;
 
 		//create the guides container if we haven't yet
 		if (!this._guidesContainer) {
-			this._guidesContainer = L.DomUtil.create('div', 'leaflet-draw-guides', this._overlayPane);
+			this._guidesContainer = L.DomUtil.create(
+				"div",
+				"leaflet-draw-guides",
+				this._overlayPane
+			);
 		}
 
 		//draw a dash every GuildeLineDistance
@@ -1480,14 +1805,19 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 			//calculate new x,y point
 			dashPoint = {
-				x: Math.floor((pointA.x * (1 - fraction)) + (fraction * pointB.x)),
-				y: Math.floor((pointA.y * (1 - fraction)) + (fraction * pointB.y))
+				x: Math.floor(pointA.x * (1 - fraction) + fraction * pointB.x),
+				y: Math.floor(pointA.y * (1 - fraction) + fraction * pointB.y),
 			};
 
 			//add guide dash to guide container
-			dash = L.DomUtil.create('div', 'leaflet-draw-guide-dash', this._guidesContainer);
-			dash.style.backgroundColor =
-				!this._errorShown ? this.options.shapeOptions.color : this.options.drawError.color;
+			dash = L.DomUtil.create(
+				"div",
+				"leaflet-draw-guide-dash",
+				this._guidesContainer
+			);
+			dash.style.backgroundColor = !this._errorShown
+				? this.options.shapeOptions.color
+				: this.options.drawError.color;
 
 			L.DomUtil.setPosition(dash, dashPoint);
 		}
@@ -1512,23 +1842,24 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 	_getTooltipText: function () {
 		var showLength = this.options.showLength,
-			labelText, distanceStr;
+			labelText,
+			distanceStr;
 		if (this._markers.length === 0) {
 			labelText = {
-				text: L.drawLocal.draw.handlers.polyline.tooltip.start
+				text: L.drawLocal.draw.handlers.polyline.tooltip.start,
 			};
 		} else {
-			distanceStr = showLength ? this._getMeasurementString() : '';
+			distanceStr = showLength ? this._getMeasurementString() : "";
 
 			if (this._markers.length === 1) {
 				labelText = {
 					text: L.drawLocal.draw.handlers.polyline.tooltip.cont,
-					subtext: distanceStr
+					subtext: distanceStr,
 				};
 			} else {
 				labelText = {
 					text: L.drawLocal.draw.handlers.polyline.tooltip.end,
-					subtext: distanceStr
+					subtext: distanceStr,
 				};
 			}
 		}
@@ -1537,7 +1868,8 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 	_updateRunningMeasure: function (latlng, added) {
 		var markersLength = this._markers.length,
-			previousMarkerIndex, distance;
+			previousMarkerIndex,
+			distance;
 
 		if (this._markers.length === 1) {
 			this._measurementRunningTotal = 0;
@@ -1546,9 +1878,15 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 			// Calculate the distance based on the version
 			if (L.GeometryUtil.isVersion07x()) {
-				distance = latlng.distanceTo(this._markers[previousMarkerIndex].getLatLng()) * (this.options.factor || 1);
+				distance =
+					latlng.distanceTo(this._markers[previousMarkerIndex].getLatLng()) *
+					(this.options.factor || 1);
 			} else {
-				distance = this._map.distance(latlng, this._markers[previousMarkerIndex].getLatLng()) * (this.options.factor || 1);
+				distance =
+					this._map.distance(
+						latlng,
+						this._markers[previousMarkerIndex].getLatLng()
+					) * (this.options.factor || 1);
 			}
 
 			this._measurementRunningTotal += distance * (added ? 1 : -1);
@@ -1562,12 +1900,28 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 		// Calculate the distance from the last fixed point to the mouse position based on the version
 		if (L.GeometryUtil.isVersion07x()) {
-			distance = previousLatLng && currentLatLng && currentLatLng.distanceTo ? this._measurementRunningTotal + currentLatLng.distanceTo(previousLatLng) * (this.options.factor || 1) : this._measurementRunningTotal || 0;
+			distance =
+				previousLatLng && currentLatLng && currentLatLng.distanceTo
+					? this._measurementRunningTotal +
+					  currentLatLng.distanceTo(previousLatLng) *
+							(this.options.factor || 1)
+					: this._measurementRunningTotal || 0;
 		} else {
-			distance = previousLatLng && currentLatLng ? this._measurementRunningTotal + this._map.distance(currentLatLng, previousLatLng) * (this.options.factor || 1) : this._measurementRunningTotal || 0;
+			distance =
+				previousLatLng && currentLatLng
+					? this._measurementRunningTotal +
+					  this._map.distance(currentLatLng, previousLatLng) *
+							(this.options.factor || 1)
+					: this._measurementRunningTotal || 0;
 		}
 
-		return L.GeometryUtil.readableDistance(distance, this.options.metric, this.options.feet, this.options.nautic, this.options.precision);
+		return L.GeometryUtil.readableDistance(
+			distance,
+			this.options.metric,
+			this.options.feet,
+			this.options.nautic,
+			this.options.precision
+		);
 	},
 
 	_showErrorTooltip: function () {
@@ -1576,15 +1930,18 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		// Update tooltip
 		this._tooltip
 			.showAsError()
-			.updateContent({text: this.options.drawError.message});
+			.updateContent({ text: this.options.drawError.message });
 
 		// Update shape
 		this._updateGuideColor(this.options.drawError.color);
-		this._poly.setStyle({color: this.options.drawError.color});
+		this._poly.setStyle({ color: this.options.drawError.color });
 
 		// Hide the error after 2 seconds
 		this._clearHideErrorTimeout();
-		this._hideErrorTimeout = setTimeout(L.Util.bind(this._hideErrorTooltip, this), this.options.drawError.timeout);
+		this._hideErrorTimeout = setTimeout(
+			L.Util.bind(this._hideErrorTooltip, this),
+			this.options.drawError.timeout
+		);
 	},
 
 	_hideErrorTooltip: function () {
@@ -1593,13 +1950,11 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		this._clearHideErrorTimeout();
 
 		// Revert tooltip
-		this._tooltip
-			.removeError()
-			.updateContent(this._getTooltipText());
+		this._tooltip.removeError().updateContent(this._getTooltipText());
 
 		// Revert shape
 		this._updateGuideColor(this.options.shapeOptions.color);
-		this._poly.setStyle({color: this.options.shapeOptions.color});
+		this._poly.setStyle({ color: this.options.shapeOptions.color });
 	},
 
 	_clearHideErrorTimeout: function () {
@@ -1617,21 +1972,31 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 
 	// see _disableNewMarkers
 	_enableNewMarkers: function () {
-		setTimeout(function () {
-			this._disableMarkers = false;
-		}.bind(this), 50);
+		setTimeout(
+			function () {
+				this._disableMarkers = false;
+			}.bind(this),
+			50
+		);
 	},
 
 	_cleanUpShape: function () {
 		if (this._markers.length > 1) {
-			this._markers[this._markers.length - 1].off('click', this._finishShape, this);
+			this._markers[this._markers.length - 1].off(
+				"click",
+				this._finishShape,
+				this
+			);
 		}
 	},
 
 	_fireCreatedEvent: function () {
-		var poly = new this.Poly(this._poly.getLatLngs(), this.options.shapeOptions);
+		var poly = new this.Poly(
+			this._poly.getLatLngs(),
+			this.options.shapeOptions
+		);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, poly);
-	}
+	},
 });
 
 
@@ -2257,689 +2622,16 @@ L.Draw.Circle = L.Draw.SimpleShape.extend({
  * @aka Draw.DuongDay
  * @inherits L.Draw.Feature
  */
-L.Draw.DuongDay = L.Draw.Feature.extend({
+L.Draw.DuongDay = L.Draw.Polyline.extend({
 	statics: {
 		TYPE: "duongDay",
 	},
-
-	Poly: L.Polyline,
-
-	options: {
-		allowIntersection: true,
-		repeatMode: false,
-		drawError: {
-			color: "#b00b00",
-			timeout: 2500,
-		},
-		icon: new L.DivIcon({
-			iconSize: new L.Point(8, 8),
-			className: "leaflet-div-icon leaflet-editing-icon",
-		}),
-		touchIcon: new L.DivIcon({
-			iconSize: new L.Point(20, 20),
-			className: "leaflet-div-icon leaflet-editing-icon leaflet-touch-icon",
-		}),
-		guidelineDistance: 20,
-		maxGuideLineLength: 4000,
-		shapeOptions: {
-			stroke: true,
-			color: "#3388ff",
-			weight: 4,
-			opacity: 0.5,
-			fill: false,
-			clickable: true,
-		},
-		metric: true, // Whether to use the metric measurement system or imperial
-		feet: true, // When not metric, to use feet instead of yards for display.
-		nautic: false, // When not metric, not feet use nautic mile for display
-		showLength: true, // Whether to display distance in the tooltip
-		zIndexOffset: 2000, // This should be > than the highest z-index any map layers
-		factor: 1, // To change distance calculation
-		maxPoints: 0, // Once this number of points are placed, finish shape
-	},
-
-	// @method initialize(): void
 	initialize: function (map, options) {
-		// if touch, switch to touch icon
-		if (L.Browser.touch) {
-			this.options.icon = this.options.touchIcon;
-		}
-
-		// Need to set this here to ensure the correct message is used.
-		this.options.drawError.message = L.drawLocal.draw.handlers.duongDay.error;
-
-		// Merge default drawError options with custom options
-		if (options && options.drawError) {
-			options.drawError = L.Util.extend(
-				{},
-				this.options.drawError,
-				options.drawError
-			);
-		}
-
-		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
+		L.Draw.Polyline.prototype.initialize.call(this, map, options);
 		this.type = L.Draw.DuongDay.TYPE;
-
-		L.Draw.Feature.prototype.initialize.call(this, map, options);
 	},
-
-	// @method addHooks(): void
-	// Add listener hooks to this handler
-	addHooks: function () {
-		L.Draw.Feature.prototype.addHooks.call(this);
-		if (this._map) {
-			this._markers = [];
-
-			this._markerGroup = new L.LayerGroup();
-			this._map.addLayer(this._markerGroup);
-
-			this._poly = new L.Polyline([], this.options.shapeOptions);
-
-			this._tooltip.updateContent(this._getTooltipText());
-
-			// Make a transparent marker that will used to catch click events. These click
-			// events will create the vertices. We need to do this so we can ensure that
-			// we can create vertices over other map layers (markers, vector layers). We
-			// also do not want to trigger any click handlers of objects we are clicking on
-			// while drawing.
-			if (!this._mouseMarker) {
-				this._mouseMarker = L.marker(this._map.getCenter(), {
-					icon: L.divIcon({
-						className: "leaflet-mouse-marker",
-						iconAnchor: [20, 20],
-						iconSize: [40, 40],
-					}),
-					opacity: 0,
-					zIndexOffset: this.options.zIndexOffset,
-				});
-			}
-
-			this._mouseMarker
-				.on("mouseout", this._onMouseOut, this)
-				.on("mousemove", this._onMouseMove, this) // Necessary to prevent 0.8 stutter
-				.on("mousedown", this._onMouseDown, this)
-				.on("mouseup", this._onMouseUp, this) // Necessary for 0.8 compatibility
-				.addTo(this._map);
-
-			this._map
-				.on("mouseup", this._onMouseUp, this) // Necessary for 0.7 compatibility
-				.on("mousemove", this._onMouseMove, this)
-				.on("zoomlevelschange", this._onZoomEnd, this)
-				.on("touchstart", this._onTouch, this)
-				.on("zoomend", this._onZoomEnd, this);
-		}
-	},
-
-	// @method removeHooks(): void
-	// Remove listener hooks from this handler.
-	removeHooks: function () {
-		L.Draw.Feature.prototype.removeHooks.call(this);
-
-		this._clearHideErrorTimeout();
-
-		this._cleanUpShape();
-
-		// remove markers from map
-		this._map.removeLayer(this._markerGroup);
-		delete this._markerGroup;
-		delete this._markers;
-
-		this._map.removeLayer(this._poly);
-		delete this._poly;
-
-		this._mouseMarker
-			.off("mousedown", this._onMouseDown, this)
-			.off("mouseout", this._onMouseOut, this)
-			.off("mouseup", this._onMouseUp, this)
-			.off("mousemove", this._onMouseMove, this);
-		this._map.removeLayer(this._mouseMarker);
-		delete this._mouseMarker;
-
-		// clean up DOM
-		this._clearGuides();
-
-		this._map
-			.off("mouseup", this._onMouseUp, this)
-			.off("mousemove", this._onMouseMove, this)
-			.off("zoomlevelschange", this._onZoomEnd, this)
-			.off("zoomend", this._onZoomEnd, this)
-			.off("touchstart", this._onTouch, this)
-			.off("click", this._onTouch, this);
-	},
-
-	// @method deleteLastVertex(): void
-	// Remove the last vertex from the polyline, removes polyline from map if only one point exists.
-	deleteLastVertex: function () {
-		if (this._markers.length <= 1) {
-			return;
-		}
-
-		var lastMarker = this._markers.pop(),
-			poly = this._poly,
-			// Replaces .spliceLatLngs()
-			latlngs = poly.getLatLngs(),
-			latlng = latlngs.splice(-1, 1)[0];
-		this._poly.setLatLngs(latlngs);
-
-		this._markerGroup.removeLayer(lastMarker);
-
-		if (poly.getLatLngs().length < 2) {
-			this._map.removeLayer(poly);
-		}
-
-		this._vertexChanged(latlng, false);
-	},
-
-	// @method addVertex(): void
-	// Add a vertex to the end of the polyline
-	addVertex: function (latlng) {
-		var markersLength = this._markers.length;
-		// markersLength must be greater than or equal to 2 before intersections can occur
-		if (
-			markersLength >= 2 &&
-			!this.options.allowIntersection &&
-			this._poly.newLatLngIntersects(latlng)
-		) {
-			this._showErrorTooltip();
-			return;
-		} else if (this._errorShown) {
-			this._hideErrorTooltip();
-		}
-
-		const latLngs = this._poly.getLatLngs();
-
-		if (latLngs.length !== 0) {
-			const lastLatLng = latLngs[latLngs.length - 1];
-			const lastPoint = this._map.latLngToLayerPoint(lastLatLng);
-			const curPoint = this._map.latLngToLayerPoint(latlng);
-			const pM = L.point(lastPoint.x, curPoint.y);
-			const latLngM = this._map.layerPointToLatLng(pM);
-			this._markers.push(this._createMarker(latLngM));
-			this._poly.addLatLng(latLngM);
-		}
-		this._markers.push(this._createMarker(latlng));
-		this._poly.addLatLng(latlng);
-
-		if (this._poly.getLatLngs().length === 3) {
-			this._map.addLayer(this._poly);
-		}
-
-		this._vertexChanged(latlng, true);
-	},
-
-	// @method completeShape(): void
-	// Closes the polyline between the first and last points
-	completeShape: function () {
-		if (this._markers.length <= 1 || !this._shapeIsValid()) {
-			return;
-		}
-
-		this._fireCreatedEvent();
-		this.disable();
-
-		if (this.options.repeatMode) {
-			this.enable();
-		}
-	},
-
-	_finishShape: function () {
-		var latlngs = this._poly._defaultShape
-			? this._poly._defaultShape()
-			: this._poly.getLatLngs();
-		var intersects = this._poly.newLatLngIntersects(
-			latlngs[latlngs.length - 1]
-		);
-
-		if (
-			(!this.options.allowIntersection && intersects) ||
-			!this._shapeIsValid()
-		) {
-			this._showErrorTooltip();
-			return;
-		}
-
-		this._fireCreatedEvent();
-		this.disable();
-		if (this.options.repeatMode) {
-			this.enable();
-		}
-	},
-
-	// Called to verify the shape is valid when the user tries to finish it
-	// Return false if the shape is not valid
-	_shapeIsValid: function () {
-		return true;
-	},
-
-	_onZoomEnd: function () {
-		if (this._markers !== null) {
-			this._updateGuide();
-		}
-	},
-
-	_onMouseMove: function (e) {
-		var newPos = this._map.mouseEventToLayerPoint(e.originalEvent);
-		var latlng = this._map.layerPointToLatLng(newPos);
-
-		// Save latlng
-		// should this be moved to _updateGuide() ?
-		this._currentLatLng = latlng;
-
-		this._updateTooltip(latlng);
-
-		// Update the guide line
-		this._updateGuide(newPos);
-
-		// Update the mouse marker position
-		this._mouseMarker.setLatLng(latlng);
-
-		L.DomEvent.preventDefault(e.originalEvent);
-	},
-
-	_vertexChanged: function (latlng, added) {
-		this._map.fire(L.Draw.Event.DRAWVERTEX, { layers: this._markerGroup });
-		this._updateFinishHandler();
-
-		this._updateRunningMeasure(latlng, added);
-
-		this._clearGuides();
-
-		this._updateTooltip();
-	},
-
-	_onMouseDown: function (e) {
-		if (!this._clickHandled && !this._touchHandled && !this._disableMarkers) {
-			this._onMouseMove(e);
-			this._clickHandled = true;
-			this._disableNewMarkers();
-			var originalEvent = e.originalEvent;
-			var clientX = originalEvent.clientX;
-			var clientY = originalEvent.clientY;
-			this._startPoint.call(this, clientX, clientY);
-		}
-	},
-
-	_startPoint: function (clientX, clientY) {
-		this._mouseDownOrigin = L.point(clientX, clientY);
-	},
-
-	_onMouseUp: function (e) {
-		var originalEvent = e.originalEvent;
-		var clientX = originalEvent.clientX;
-		var clientY = originalEvent.clientY;
-		this._endPoint.call(this, clientX, clientY, e);
-		this._clickHandled = null;
-	},
-
-	_endPoint: function (clientX, clientY, e) {
-		if (this._mouseDownOrigin) {
-			var dragCheckDistance = L.point(clientX, clientY).distanceTo(
-				this._mouseDownOrigin
-			);
-			var lastPtDistance = this._calculateFinishDistance(e.latlng);
-			if (
-				this.options.maxPoints > 1 &&
-				this.options.maxPoints == this._markers.length + 1
-			) {
-				this.addVertex(e.latlng);
-				this._finishShape();
-			} else if (lastPtDistance < 10 && L.Browser.touch) {
-				this._finishShape();
-			} else if (
-				Math.abs(dragCheckDistance) <
-				9 * (window.devicePixelRatio || 1)
-			) {
-				this.addVertex(e.latlng);
-			}
-			this._enableNewMarkers(); // after a short pause, enable new markers
-		}
-		this._mouseDownOrigin = null;
-	},
-
-	// ontouch prevented by clickHandled flag because some browsers fire both click/touch events,
-	// causing unwanted behavior
-	_onTouch: function (e) {
-		var originalEvent = e.originalEvent;
-		var clientX;
-		var clientY;
-		if (
-			originalEvent.touches &&
-			originalEvent.touches[0] &&
-			!this._clickHandled &&
-			!this._touchHandled &&
-			!this._disableMarkers
-		) {
-			clientX = originalEvent.touches[0].clientX;
-			clientY = originalEvent.touches[0].clientY;
-			this._disableNewMarkers();
-			this._touchHandled = true;
-			this._startPoint.call(this, clientX, clientY);
-			this._endPoint.call(this, clientX, clientY, e);
-			this._touchHandled = null;
-		}
-		this._clickHandled = null;
-	},
-
-	_onMouseOut: function () {
-		if (this._tooltip) {
-			this._tooltip._onMouseOut.call(this._tooltip);
-		}
-	},
-
-	// calculate if we are currently within close enough distance
-	// of the closing point (first point for shapes, last point for lines)
-	// this is semi-ugly code but the only reliable way i found to get the job done
-	// note: calculating point.distanceTo between mouseDownOrigin and last marker did NOT work
-	_calculateFinishDistance: function (potentialLatLng) {
-		var lastPtDistance;
-		if (this._markers.length > 0) {
-			var finishMarker;
-			if (this.type === L.Draw.DuongDay.TYPE) {
-				finishMarker = this._markers[this._markers.length - 1];
-			} else if (this.type === L.Draw.Polygon.TYPE) {
-				finishMarker = this._markers[0];
-			} else {
-				return Infinity;
-			}
-			var lastMarkerPoint = this._map.latLngToContainerPoint(
-					finishMarker.getLatLng()
-				),
-				potentialMarker = new L.Marker(potentialLatLng, {
-					icon: this.options.icon,
-					zIndexOffset: this.options.zIndexOffset * 2,
-				});
-			var potentialMarkerPint = this._map.latLngToContainerPoint(
-				potentialMarker.getLatLng()
-			);
-			lastPtDistance = lastMarkerPoint.distanceTo(potentialMarkerPint);
-		} else {
-			lastPtDistance = Infinity;
-		}
-		return lastPtDistance;
-	},
-
-	_updateFinishHandler: function () {
-		var markerCount = this._markers.length;
-		// The last marker should have a click handler to close the polyline
-		if (markerCount > 1) {
-			this._markers[markerCount - 1].on("click", this._finishShape, this);
-		}
-
-		// Remove the old marker click handler (as only the last point should close the polyline)
-		if (markerCount > 2) {
-			this._markers[markerCount - 2].off("click", this._finishShape, this);
-		}
-	},
-
-	_createMarker: function (latlng) {
-		var marker = new L.Marker(latlng, {
-			icon: this.options.icon,
-			zIndexOffset: this.options.zIndexOffset * 2,
-		});
-
-		this._markerGroup.addLayer(marker);
-
-		return marker;
-	},
-
-	_updateGuide: function (newPos) {
-		var markerCount = this._markers ? this._markers.length : 0;
-
-		if (markerCount > 0) {
-			newPos = newPos || this._map.latLngToLayerPoint(this._currentLatLng);
-
-			// draw the guide line
-			this._clearGuides();
-			this._drawGuide(
-				this._map.latLngToLayerPoint(
-					this._markers[markerCount - 1].getLatLng()
-				),
-				newPos
-			);
-		}
-	},
-
-	_updateTooltip: function (latLng) {
-		var text = this._getTooltipText();
-
-		if (latLng) {
-			this._tooltip.updatePosition(latLng);
-		}
-
-		if (!this._errorShown) {
-			this._tooltip.updateContent(text);
-		}
-	},
-
-	_drawGuidePath: function (pointA, pointB) {
-		var length = Math.floor(
-				Math.sqrt(
-					Math.pow(pointB.x - pointA.x, 2) + Math.pow(pointB.y - pointA.y, 2)
-				)
-			),
-			guidelineDistance = this.options.guidelineDistance,
-			maxGuideLineLength = this.options.maxGuideLineLength,
-			// Only draw a guideline with a max length
-			i =
-				length > maxGuideLineLength
-					? length - maxGuideLineLength
-					: guidelineDistance,
-			fraction,
-			dashPoint,
-			dash;
-
-		//create the guides container if we haven't yet
-		if (!this._guidesContainer) {
-			this._guidesContainer = L.DomUtil.create(
-				"div",
-				"leaflet-draw-guides",
-				this._overlayPane
-			);
-		}
-
-		//draw a dash every GuildeLineDistance
-		for (; i < length; i += this.options.guidelineDistance) {
-			//work out fraction along line we are
-			fraction = i / length;
-
-			//calculate new x,y point
-			dashPoint = {
-				x: Math.floor(pointA.x * (1 - fraction) + fraction * pointB.x),
-				y: Math.floor(pointA.y * (1 - fraction) + fraction * pointB.y),
-			};
-
-			//add guide dash to guide container
-			dash = L.DomUtil.create(
-				"div",
-				"leaflet-draw-guide-dash",
-				this._guidesContainer
-			);
-			dash.style.backgroundColor = !this._errorShown
-				? this.options.shapeOptions.color
-				: this.options.drawError.color;
-
-			L.DomUtil.setPosition(dash, dashPoint);
-		}
-	},
-
-	_drawGuide: function (pointA, pointB) {
-		var pointM = L.point(pointA.x, pointB.y);
-		this._drawGuidePath(pointA, pointM);
-		this._drawGuidePath(pointM, pointB);
-	},
-
-	_updateGuideColor: function (color) {
-		if (this._guidesContainer) {
-			for (var i = 0, l = this._guidesContainer.childNodes.length; i < l; i++) {
-				this._guidesContainer.childNodes[i].style.backgroundColor = color;
-			}
-		}
-	},
-
-	// removes all child elements (guide dashes) from the guides container
-	_clearGuides: function () {
-		if (this._guidesContainer) {
-			while (this._guidesContainer.firstChild) {
-				this._guidesContainer.removeChild(this._guidesContainer.firstChild);
-			}
-		}
-	},
-
-	_getTooltipText: function () {
-		var showLength = this.options.showLength,
-			labelText,
-			distanceStr;
-		if (this._markers.length === 0) {
-			labelText = {
-				text: L.drawLocal.draw.handlers.polyline.tooltip.start,
-			};
-		} else {
-			distanceStr = showLength ? this._getMeasurementString() : "";
-
-			if (this._markers.length === 1) {
-				labelText = {
-					text: L.drawLocal.draw.handlers.polyline.tooltip.cont,
-					subtext: distanceStr,
-				};
-			} else {
-				labelText = {
-					text: L.drawLocal.draw.handlers.polyline.tooltip.end,
-					subtext: distanceStr,
-				};
-			}
-		}
-		return labelText;
-	},
-
-	_updateRunningMeasure: function (latlng, added) {
-		var markersLength = this._markers.length,
-			previousMarkerIndex,
-			distance;
-
-		if (this._markers.length === 1) {
-			this._measurementRunningTotal = 0;
-		} else {
-			previousMarkerIndex = markersLength - (added ? 2 : 1);
-
-			// Calculate the distance based on the version
-			if (L.GeometryUtil.isVersion07x()) {
-				distance =
-					latlng.distanceTo(this._markers[previousMarkerIndex].getLatLng()) *
-					(this.options.factor || 1);
-			} else {
-				distance =
-					this._map.distance(
-						latlng,
-						this._markers[previousMarkerIndex].getLatLng()
-					) * (this.options.factor || 1);
-			}
-
-			this._measurementRunningTotal += distance * (added ? 1 : -1);
-		}
-	},
-
-	_getMeasurementString: function () {
-		var currentLatLng = this._currentLatLng,
-			previousLatLng = this._markers[this._markers.length - 1].getLatLng(),
-			distance;
-
-		// Calculate the distance from the last fixed point to the mouse position based on the version
-		if (L.GeometryUtil.isVersion07x()) {
-			distance =
-				previousLatLng && currentLatLng && currentLatLng.distanceTo
-					? this._measurementRunningTotal +
-					  currentLatLng.distanceTo(previousLatLng) *
-							(this.options.factor || 1)
-					: this._measurementRunningTotal || 0;
-		} else {
-			distance =
-				previousLatLng && currentLatLng
-					? this._measurementRunningTotal +
-					  this._map.distance(currentLatLng, previousLatLng) *
-							(this.options.factor || 1)
-					: this._measurementRunningTotal || 0;
-		}
-
-		return L.GeometryUtil.readableDistance(
-			distance,
-			this.options.metric,
-			this.options.feet,
-			this.options.nautic,
-			this.options.precision
-		);
-	},
-
-	_showErrorTooltip: function () {
-		this._errorShown = true;
-
-		// Update tooltip
-		this._tooltip
-			.showAsError()
-			.updateContent({ text: this.options.drawError.message });
-
-		// Update shape
-		this._updateGuideColor(this.options.drawError.color);
-		this._poly.setStyle({ color: this.options.drawError.color });
-
-		// Hide the error after 2 seconds
-		this._clearHideErrorTimeout();
-		this._hideErrorTimeout = setTimeout(
-			L.Util.bind(this._hideErrorTooltip, this),
-			this.options.drawError.timeout
-		);
-	},
-
-	_hideErrorTooltip: function () {
-		this._errorShown = false;
-
-		this._clearHideErrorTimeout();
-
-		// Revert tooltip
-		this._tooltip.removeError().updateContent(this._getTooltipText());
-
-		// Revert shape
-		this._updateGuideColor(this.options.shapeOptions.color);
-		this._poly.setStyle({ color: this.options.shapeOptions.color });
-	},
-
-	_clearHideErrorTimeout: function () {
-		if (this._hideErrorTimeout) {
-			clearTimeout(this._hideErrorTimeout);
-			this._hideErrorTimeout = null;
-		}
-	},
-
-	// disable new markers temporarily;
-	// this is to prevent duplicated touch/click events in some browsers
-	_disableNewMarkers: function () {
-		this._disableMarkers = true;
-	},
-
-	// see _disableNewMarkers
-	_enableNewMarkers: function () {
-		setTimeout(
-			function () {
-				this._disableMarkers = false;
-			}.bind(this),
-			50
-		);
-	},
-
-	_cleanUpShape: function () {
-		if (this._markers.length > 1) {
-			this._markers[this._markers.length - 1].off(
-				"click",
-				this._finishShape,
-				this
-			);
-		}
-	},
-
 	_fireCreatedEvent: function () {
-		var poly = new this.Poly(
-			this._poly.getLatLngs(),
-			this.options.shapeOptions
-		);
+		var poly = L.duongDay(this._poly.getLatLngs(), this.options);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, poly);
 	},
 });
@@ -2957,13 +2649,25 @@ L.Draw.ThanhCai = L.Draw.Feature.extend({
 	},
 
 	options: {
-		icon: new L.Icon.Default(),
+		icon: new L.DivIcon({
+			iconSize: new L.Point(8, 8),
+			className: "leaflet-div-icon leaflet-editing-icon",
+		}),
+		touchIcon: new L.DivIcon({
+			iconSize: new L.Point(20, 20),
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-touch-icon",
+		}),
 		repeatMode: false,
 		zIndexOffset: 2000, // This should be > than the highest z-index any markers
+		isEditPoly: false,
 	},
 
 	// @method initialize(): void
 	initialize: function (map, options) {
+		// if touch, switch to touch icon
+		if (L.Browser.touch) {
+			this.options.icon = this.options.touchIcon;
+		}
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
 		this.type = L.Draw.ThanhCai.TYPE;
 
@@ -3080,13 +2784,25 @@ L.Draw.Role = L.Draw.Feature.extend({
 	},
 
 	options: {
-		icon: new L.Icon.Default(),
+		icon: new L.DivIcon({
+			iconSize: new L.Point(8, 8),
+			className: "leaflet-div-icon leaflet-editing-icon",
+		}),
+		touchIcon: new L.DivIcon({
+			iconSize: new L.Point(20, 20),
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-touch-icon",
+		}),
 		repeatMode: false,
-		zIndexOffset: 2000, // This should be > than the highest z-index any markers
+		zIndexOffset: 2000, // This should be > than the highest z-index any markers,
+		isEditPoly: false,
 	},
 
 	// @method initialize(): void
 	initialize: function (map, options) {
+		// if touch, switch to touch icon
+		if (L.Browser.touch) {
+			this.options.icon = this.options.touchIcon;
+		}
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
 		this.type = L.Draw.Role.TYPE;
 
@@ -3203,13 +2919,24 @@ L.Draw.MayBienAp = L.Draw.Feature.extend({
 	},
 
 	options: {
-		icon: new L.Icon.Default(),
+		icon: new L.DivIcon({
+			iconSize: new L.Point(8, 8),
+			className: "leaflet-div-icon leaflet-editing-icon",
+		}),
+		touchIcon: new L.DivIcon({
+			iconSize: new L.Point(20, 20),
+			className: "leaflet-div-icon leaflet-editing-icon leaflet-touch-icon",
+		}),
 		repeatMode: false,
 		zIndexOffset: 2000, // This should be > than the highest z-index any markers
 	},
 
 	// @method initialize(): void
 	initialize: function (map, options) {
+		// if touch, switch to touch icon
+		if (L.Browser.touch) {
+			this.options.icon = this.options.touchIcon;
+		}
 		// Save the type so super can fire, need to do this as cannot do this.TYPE :(
 		this.type = L.Draw.MayBienAp.TYPE;
 
@@ -3915,14 +3642,12 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 });
 
 // L.Polyline.addInitHook(function () {
-
 // 	// Check to see if handler has already been initialized. This is to support versions of Leaflet that still have L.Handler.PolyEdit
 // 	if (this.editing) {
 // 		return;
 // 	}
 
 // 	if (L.Edit.Poly) {
-
 // 		this.editing = new L.Edit.Poly(this);
 
 // 		if (this.options.editable) {
@@ -3930,13 +3655,13 @@ L.Edit.PolyVerticesEdit = L.Handler.extend({
 // 		}
 // 	}
 
-// 	this.on('add', function () {
+// 	this.on("add", function () {
 // 		if (this.editing && this.editing.enabled()) {
 // 			this.editing.addHooks();
 // 		}
 // 	});
 
-// 	this.on('remove', function () {
+// 	this.on("remove", function () {
 // 		if (this.editing && this.editing.enabled()) {
 // 			this.editing.removeHooks();
 // 		}
@@ -4198,6 +3923,31 @@ L.Edit.SimpleShape = L.Handler.extend({
 
 
 
+L.Edit.SimpleShapeSnap = L.Edit.SimpleShape.extend({
+	initialize: function (shape, options) {
+		L.Edit.SimpleShape.prototype.initialize.call(this, shape, options);
+	},
+
+	addHooks: function () {
+		L.Edit.SimpleShape.prototype.addHooks.call(this);
+		this._moveMarker.snapediting = new L.Handler.MarkerSnap(
+			this._map,
+			this._moveMarker
+		);
+		this.options.guideLayers.forEach((element) => {
+			this._moveMarker.snapediting.addGuideLayer(element);
+		});
+		this._moveMarker.snapediting.enable();
+	},
+
+	removeHooks: function () {
+		L.Edit.SimpleShape.prototype.removeHooks.call(this);
+		this._moveMarker.snapediting.disable();
+	},
+});
+
+
+
 L.Edit = L.Edit || {};
 /**
  * @class L.Edit.Rectangle
@@ -4448,9 +4198,9 @@ L.Edit = L.Edit || {};
  * @aka Edit.Circle
  * @inherits L.Edit.SimpleShape
  */
-L.Edit.ThanhCai = L.Edit.SimpleShape.extend({
+L.Edit.ThanhCai = L.Edit.SimpleShapeSnap.extend({
 	initialize: function (shape, options) {
-		L.Edit.SimpleShape.prototype.initialize.call(this, shape, options);
+		L.Edit.SimpleShapeSnap.prototype.initialize.call(this, shape, options);
 	},
 
 	_createMoveMarker: function () {
@@ -4502,7 +4252,7 @@ L.ThanhCai.addInitHook(function () {
 	}
 
 	if (L.Edit.ThanhCai) {
-		this.editing = new L.Edit.ThanhCai(this);
+		this.editing = new L.Edit.ThanhCai(this, this.options);
 
 		if (this.options.editable) {
 			this.editing.enable();
@@ -4530,7 +4280,11 @@ L.Edit = L.Edit || {};
  * @aka Edit.Circle
  * @inherits L.Edit.SimpleShape
  */
-L.Edit.Role = L.Edit.SimpleShape.extend({
+L.Edit.Role = L.Edit.SimpleShapeSnap.extend({
+	initialize: function (shape, options) {
+		L.Edit.SimpleShapeSnap.prototype.initialize.call(this, shape, options);
+	},
+
 	_createMoveMarker: function () {
 		this._moveMarker = this._createMarker(
 			this._shape.getCenterCus(),
@@ -4582,8 +4336,7 @@ L.Role.addInitHook(function () {
 	}
 
 	if (L.Edit.Role) {
-		this.editing = new L.Edit.Role(this);
-
+		this.editing = new L.Edit.Role(this, this.options);
 		if (this.options.editable) {
 			this.editing.enable();
 		}
@@ -4610,9 +4363,9 @@ L.Edit = L.Edit || {};
  * @aka Edit.Circle
  * @inherits L.Edit.SimpleShape
  */
-L.Edit.MayBienAp = L.Edit.SimpleShape.extend({
+L.Edit.MayBienAp = L.Edit.SimpleShapeSnap.extend({
 	initialize: function (shape, options) {
-		L.Edit.SimpleShape.prototype.initialize.call(this, shape, options);
+		L.Edit.SimpleShapeSnap.prototype.initialize.call(this, shape, options);
 	},
 
 	_createMoveMarker: function () {
@@ -4664,7 +4417,66 @@ L.MayBienAp.addInitHook(function () {
 	}
 
 	if (L.Edit.MayBienAp) {
-		this.editing = new L.Edit.MayBienAp(this);
+		this.editing = new L.Edit.MayBienAp(this, this.options);
+
+		if (this.options.editable) {
+			this.editing.enable();
+		}
+	}
+
+	this.on("add", function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.addHooks();
+		}
+	});
+
+	this.on("remove", function () {
+		if (this.editing && this.editing.enabled()) {
+			this.editing.removeHooks();
+		}
+	});
+});
+
+
+
+L.Edit = L.Edit || {};
+
+/**
+ * @class L.Edit.DuongDay
+ * @aka L.Edit.Poly
+ * @aka Edit.Poly
+ */
+L.Edit.DuongDay = L.Edit.Poly.extend({
+	initialize: function (poly, options) {
+		L.Edit.Poly.prototype.initialize.call(this, poly, options);
+		L.Util.setOptions(this, options);
+	},
+	addHooks: function () {
+		L.Edit.Poly.prototype.addHooks.call(this);
+		this._poly.snapediting = new L.Handler.PolylineSnap(
+			this._poly._map,
+			this._poly,
+			this._poly.options
+		);
+		this.options.guideLayers.forEach((element) => {
+			this._poly.snapediting.addGuideLayer(element);
+		});
+		this._poly.snapediting.enable();
+	},
+	removeHooks: function () {
+		L.Edit.Poly.prototype.removeHooks.call(this);
+		this._poly.snapediting.disable();
+	},
+});
+
+L.DuongDay.addInitHook(function () {
+	// Check to see if handler has already been initialized. This is to support versions of Leaflet that still have L.Handler.PolyEdit
+	if (this.editing) {
+		return;
+	}
+
+	if (L.Edit.DuongDay) {
+		this.editing = new L.Edit.DuongDay(this, this.options);
 
 		if (this.options.editable) {
 			this.editing.enable();
@@ -6633,7 +6445,7 @@ L.DrawToolbar = L.Toolbar.extend({
 		thanhCai: {},
 		mayBienAp: {},
 		duongDay: {},
-		// polyline: {},
+		polyline: {},
 		// polygon: {},
 		// rectangle: {},
 		// circle: {},
@@ -6680,11 +6492,11 @@ L.DrawToolbar = L.Toolbar.extend({
 				handler: new L.Draw.DuongDay(map, this.options.duongDay),
 				title: L.drawLocal.draw.toolbar.buttons.duongDay,
 			},
-			// {
-			// 	enabled: this.options.polyline,
-			// 	handler: new L.Draw.Polyline(map, this.options.polyline),
-			// 	title: L.drawLocal.draw.toolbar.buttons.polyline,
-			// },
+			{
+				enabled: this.options.polyline,
+				handler: new L.Draw.Polyline(map, this.options.polyline),
+				title: L.drawLocal.draw.toolbar.buttons.polyline,
+			},
 			// {
 			// 	enabled: this.options.polygon,
 			// 	handler: new L.Draw.Polygon(map, this.options.polygon),
@@ -7109,6 +6921,7 @@ L.EditToolbar.Edit = L.Handler.extend({
 				} else if (layer instanceof L.MayBienAp) {
 					options.original.chieuDai = options.chieuDai;
 					options.original.gocXoay = options.gocXoay;
+				} else if (layer instanceof L.DuongDay) {
 				}
 				editedLayers.addLayer(layer);
 				layer.edited = false;
@@ -7149,6 +6962,10 @@ L.EditToolbar.Edit = L.Handler.extend({
 						gocXoay: options.gocXoay,
 					},
 				};
+			} else if (layer instanceof L.DuongDay) {
+				this._uneditedLayerProps[id] = {
+					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs()),
+				};
 			}
 		}
 	},
@@ -7169,7 +6986,11 @@ L.EditToolbar.Edit = L.Handler.extend({
 		layer.edited = false;
 		if (this._uneditedLayerProps.hasOwnProperty(id)) {
 			L.setOptions(layer, this._uneditedLayerProps[id].options);
-			if (layer instanceof L.Role || layer instanceof L.ThanhCai) {
+			if (
+				layer instanceof L.Role ||
+				layer instanceof L.ThanhCai ||
+				layer instanceof L.DuongDay
+			) {
 				layer.setLatLngs(this._uneditedLayerProps[id].latlngs);
 			} else if (layer instanceof L.MayBienAp) {
 				layer.setLatLng(this._uneditedLayerProps[id].latlng);
