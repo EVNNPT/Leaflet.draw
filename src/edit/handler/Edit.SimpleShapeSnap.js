@@ -9,9 +9,11 @@ L.Edit.SimpleShapeSnap = L.Edit.SimpleShape.extend({
 			this._map,
 			this._moveMarker
 		);
-		this.options.guideLayers.forEach((element) => {
-			this._moveMarker.snapediting.addGuideLayer(element);
-		});
+		if (this.options.guideLayers) {
+			for (var i = 0; i < this.options.guideLayers.length; i++) {
+				this._moveMarker.snapediting.addGuideLayer(this.options.guideLayers[i]);
+			}
+		}
 		this._moveMarker.snapediting.enable();
 	},
 

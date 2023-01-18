@@ -17,9 +17,11 @@ L.Edit.DuongDay = L.Edit.Poly.extend({
 			this._poly,
 			this._poly.options
 		);
-		this.options.guideLayers.forEach((element) => {
-			this._poly.snapediting.addGuideLayer(element);
-		});
+		if (this.options.guideLayers) {
+			for (var i = 0; i < this.options.guideLayers.length; i++) {
+				this._poly.snapediting.addGuideLayer(this.options.guideLayers[i]);
+			}
+		}
 		this._poly.snapediting.enable();
 	},
 	removeHooks: function () {

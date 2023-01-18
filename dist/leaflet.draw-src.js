@@ -1,5 +1,5 @@
 /*
- Leaflet.draw 1.0.4+5e7be29, a plugin that adds drawing and editing tools to Leaflet powered maps.
+ Leaflet.draw 1.0.4+0e43cea, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
 
  https://github.com/Leaflet/Leaflet.draw
@@ -598,7 +598,7 @@ L.GuideLayer = L.Class.extend({
 	},
 	_drawGuidLayer: function () {
 		var ret = [];
-		var tpms = this._getLatLngs(
+		const latlngADs = this._getLatLngs(
 			this._getLatLngO(),
 			L.GeometryUtil.closestOnSegment(
 				this._map,
@@ -608,41 +608,42 @@ L.GuideLayer = L.Class.extend({
 			),
 			this.options.width
 		);
-		tpms = tpms.concat(
-			this._getLatLngs(
+		const latlngBCs = this._getLatLngs(
+			this._getLatLngO(),
+			L.GeometryUtil.closestOnSegment(
+				this._map,
 				this._getLatLngO(),
-				L.GeometryUtil.closestOnSegment(
-					this._map,
-					this._getLatLngO(),
-					this._getLatLngB(),
-					this._getLatLngC()
-				),
-				this.options.width
-			)
+				this._getLatLngB(),
+				this._getLatLngC()
+			),
+			this.options.width
 		);
-		tpms.push(this._getLatLngO());
-		tpms.forEach((element) => {
+		var latlngs = latlngADs.concat(latlngBCs);
+		latlngs.push(this._getLatLngO());
+
+		for (var i = 0; i < latlngs.length; i++) {
 			const dAB = L.GeometryUtil.closestOnSegment(
 				this._map,
-				element,
+				latlngs[i],
 				this._getLatLngA(),
 				this._getLatLngB()
 			);
-			ret = ret.concat(this._getLatLngs(element, dAB, this.options.height));
+			ret = ret.concat(this._getLatLngs(latlngs[i], dAB, this.options.height));
 
 			const dCD = L.GeometryUtil.closestOnSegment(
 				this._map,
-				element,
+				latlngs[i],
 				this._getLatLngC(),
 				this._getLatLngD()
 			);
-			ret = ret.concat(this._getLatLngs(element, dCD, this.options.height));
+			ret = ret.concat(this._getLatLngs(latlngs[i], dCD, this.options.height));
 
-			ret.push(element);
-		});
-		ret.forEach((e) => {
+			ret.push(latlngs[i]);
+		}
+
+		for (var i = 0; i < ret.length; i++) {
 			this.options.layer.addLayer(
-				L.circleMarker(e, {
+				L.circleMarker(ret[i], {
 					radius: 0.5,
 					color: "black",
 					fill: false,
@@ -650,7 +651,7 @@ L.GuideLayer = L.Class.extend({
 					bubblingMouseEvents: false,
 				})
 			);
-		});
+		}
 	},
 	_getLatLngs: function (latlngA, latlngB, distance) {
 		var ret = [];
@@ -688,7 +689,7 @@ L.GuideLayer = L.Class.extend({
 		}
 		return ret;
 	},
-	_getDistaceCenterToLineX() {
+	_getDistaceCenterToLineX: function () {
 		const latlngs = this._lineX.getLatLngs();
 		return L.GeometryUtil.closestOnSegment(
 			this._map,
@@ -697,7 +698,7 @@ L.GuideLayer = L.Class.extend({
 			latlngs[1]
 		).distanceTo(this._map.getCenter());
 	},
-	_getDistaceCenterToLineY() {
+	_getDistaceCenterToLineY: function () {
 		const latlngs = this._lineY.getLatLngs();
 		return L.GeometryUtil.closestOnSegment(
 			this._map,
@@ -3934,9 +3935,11 @@ L.Edit.SimpleShapeSnap = L.Edit.SimpleShape.extend({
 			this._map,
 			this._moveMarker
 		);
-		this.options.guideLayers.forEach((element) => {
-			this._moveMarker.snapediting.addGuideLayer(element);
-		});
+		if (this.options.guideLayers) {
+			for (var i = 0; i < this.options.guideLayers.length; i++) {
+				this._moveMarker.snapediting.addGuideLayer(this.options.guideLayers[i]);
+			}
+		}
 		this._moveMarker.snapediting.enable();
 	},
 
@@ -4458,9 +4461,11 @@ L.Edit.DuongDay = L.Edit.Poly.extend({
 			this._poly,
 			this._poly.options
 		);
-		this.options.guideLayers.forEach((element) => {
-			this._poly.snapediting.addGuideLayer(element);
-		});
+		if (this.options.guideLayers) {
+			for (var i = 0; i < this.options.guideLayers.length; i++) {
+				this._poly.snapediting.addGuideLayer(this.options.guideLayers[i]);
+			}
+		}
 		this._poly.snapediting.enable();
 	},
 	removeHooks: function () {
