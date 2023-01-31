@@ -3,6 +3,10 @@
 	<head>
 		<title>Leaflet.draw vector editing handlers</title>
 
+		<link rel="stylesheet" href="../../src/jquery/jquery-ui.css" />
+		<script src="../../src/jquery/jquery.js"></script>
+		<script src="../../src/jquery/jquery-ui.js"></script>
+
 		<script src="../../src/leaflet-src.js"></script>
 		<link rel="stylesheet" href="libs/leaflet.css" />
 		<script src="../../src/leaflet.extension.js"></script>
@@ -34,6 +38,7 @@
 		<script src="../../src/draw/handler/Draw.ThanhCai.js"></script>
 		<script src="../../src/draw/handler/Draw.Role.js"></script>
 		<script src="../../src/draw/handler/Draw.MayBienAp.js"></script>
+		<script src="../../src/draw/handler/Draw.Label.js"></script>
 
 		<script src="../../src/edit/EditToolbar.js"></script>
 		<script src="../../src/edit/handler/EditToolbar.Edit.js"></script>
@@ -52,6 +57,7 @@
 		<script src="../../src/edit/handler/Edit.Role.js"></script>
 		<script src="../../src/edit/handler/Edit.MayBienAp.js"></script>
 		<script src="../../src/edit/handler/Edit.DuongDay.js"></script>
+		<script src="../../src/edit/handler/Edit.Label.js"></script>
 
 		<script src="../../src/leaflet.snap.js"></script>
 		<script src="../../src/leaflet.geometryutil.js"></script>
@@ -73,12 +79,37 @@
 				width: auto;
 				height: 100%;
 			}
+
+			.leaflet-mouse-label {
+				background-color: #fff;
+				cursor: text;
+			}
+
+			.div-top {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 1000;
+			}
+
+			.form-label {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				margin-top: -75px;
+				margin-left: -150px;
+				width: 300px;
+				height: 150px;
+				border: 1px solid black;
+				background-color: #fff;
+			}
 		</style>
 	</head>
 
 	<body>
 		<div id="map"></div>
-
 		<script>
 			var map = new L.Map("map", {
 					center: new L.LatLng(0, 0),
@@ -134,6 +165,11 @@
 			});
 
 			drawControl.setDrawingOptions({
+				label: {
+					guideLayers: [snapLayerA, snapLayerB],
+					snapDistance: 10,
+					repeatMode: true,
+				},
 				duongDay: {
 					guideLayers: [snapLayerA, snapLayerB],
 					snapDistance: 10,
@@ -149,6 +185,7 @@
 					weight: 9,
 					lineCap: "square",
 					lineJoin: "square",
+					repeatMode: true,
 				},
 				thanhCai: {
 					guideLayers: [snapLayerA, snapLayerB],
@@ -156,6 +193,7 @@
 					gocXoay: 0,
 					weight: 9,
 					lineCap: "square",
+					repeatMode: true,
 				},
 				mayBienAp: {
 					guideLayers: [snapLayerA, snapLayerB],
@@ -163,6 +201,7 @@
 					gocXoay: 0,
 					weight: 9,
 					lineCap: "square",
+					repeatMode: true,
 				},
 			});
 
@@ -178,7 +217,9 @@
 					const layer = ele;
 					if (
 						!(layer instanceof L.DuongDay) &&
-						!(layer instanceof L.ThanhCai)
+						!(layer instanceof L.ThanhCai) &&
+						!(layer instanceof L.Marker) &&
+						!(layer instanceof L.Rectangle)
 					) {
 						const layerSnap = layer.getLayerSnap();
 						snapLayerB.addLayer(layerSnap);
@@ -193,7 +234,9 @@
 					const layer = ele;
 					if (
 						!(layer instanceof L.DuongDay) &&
-						!(layer instanceof L.ThanhCai)
+						!(layer instanceof L.ThanhCai) &&
+						!(layer instanceof L.Marker) &&
+						!(layer instanceof L.Rectangle)
 					) {
 						snapLayerB.removeLayer(layer.snapLayerId);
 					}
@@ -202,23 +245,28 @@
 
 			drawnItems.on("layeradd", function (e) {
 				const layer = e.layer;
-				if (!(layer instanceof L.DuongDay) && !(layer instanceof L.ThanhCai)) {
+				if (
+					!(layer instanceof L.DuongDay) &&
+					!(layer instanceof L.ThanhCai) &&
+					!(layer instanceof L.Marker) &&
+					!(layer instanceof L.Rectangle)
+				) {
 					const layerSnap = layer.getLayerSnap();
 					snapLayerB.addLayer(layerSnap);
 					layer.snapLayerId = L.Util.stamp(layerSnap);
 				}
 			});
 
-			drawnItems.addLayer(
-				L.role(L.latLng(0, 0), { guideLayers: [snapLayerA, snapLayerB] })
-			);
+			// drawnItems.addLayer(
+			// 	L.role(L.latLng(0, 0), { guideLayers: [snapLayerA, snapLayerB] })
+			// );
 
-			L.guideLayer(map, {
-				height: 50,
-				width: 50,
-				layer: snapLayerA,
-				zoom: 18,
-			});
+			// L.guideLayer(map, {
+			// 	height: 50,
+			// 	width: 50,
+			// 	layer: snapLayerA,
+			// 	zoom: 18,
+			// });
 		</script>
 	</body>
 </html>

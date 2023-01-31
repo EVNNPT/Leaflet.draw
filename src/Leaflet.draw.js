@@ -107,6 +107,7 @@ L.drawLocal = {
 				thanhCai: "Thanh cái",
 				mayBienAp: "Máy biến áp",
 				duongDay: "Đường dây",
+				label: "Label",
 			},
 		},
 		handlers: {
@@ -172,6 +173,11 @@ L.drawLocal = {
 					start: "Click to start drawing line.",
 					cont: "Click to continue drawing line.",
 					end: "Click last point to finish line.",
+				},
+			},
+			label: {
+				tooltip: {
+					start: "Click để nhập label",
 				},
 			},
 		},

@@ -419,4 +419,7 @@
 
 	L.Draw.MayBienAp.include(L.Draw.Feature.SnapMixin);
 	L.Draw.MayBienAp.addInitHook("_snap_initialize");
+
+	L.Draw.Label.include(L.Draw.Feature.SnapMixin);
+	L.Draw.Label.addInitHook("_snap_initialize");
 })();

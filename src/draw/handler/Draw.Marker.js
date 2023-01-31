@@ -5,13 +5,13 @@
  */
 L.Draw.Marker = L.Draw.Feature.extend({
 	statics: {
-		TYPE: 'marker'
+		TYPE: "marker",
 	},
 
 	options: {
 		icon: new L.Icon.Default(),
 		repeatMode: false,
-		zIndexOffset: 2000 // This should be > than the highest z-index any markers
+		zIndexOffset: 2000, // This should be > than the highest z-index any markers
 	},
 
 	// @method initialize(): void
@@ -30,27 +30,25 @@ L.Draw.Marker = L.Draw.Feature.extend({
 		L.Draw.Feature.prototype.addHooks.call(this);
 
 		if (this._map) {
-			this._tooltip.updateContent({text: this._initialLabelText});
+			this._tooltip.updateContent({ text: this._initialLabelText });
 
 			// Same mouseMarker as in Draw.Polyline
 			if (!this._mouseMarker) {
 				this._mouseMarker = L.marker(this._map.getCenter(), {
 					icon: L.divIcon({
-						className: 'leaflet-mouse-marker',
+						className: "leaflet-mouse-marker",
 						iconAnchor: [20, 20],
-						iconSize: [40, 40]
+						iconSize: [40, 40],
 					}),
 					opacity: 0,
-					zIndexOffset: this.options.zIndexOffset
+					zIndexOffset: this.options.zIndexOffset,
 				});
 			}
 
-			this._mouseMarker
-				.on('click', this._onClick, this)
-				.addTo(this._map);
+			this._mouseMarker.on("click", this._onClick, this).addTo(this._map);
 
-			this._map.on('mousemove', this._onMouseMove, this);
-			this._map.on('click', this._onTouch, this);
+			this._map.on("mousemove", this._onMouseMove, this);
+			this._map.on("click", this._onTouch, this);
 		}
 	},
 
@@ -61,20 +59,19 @@ L.Draw.Marker = L.Draw.Feature.extend({
 
 		if (this._map) {
 			this._map
-				.off('click', this._onClick, this)
-				.off('click', this._onTouch, this);
+				.off("click", this._onClick, this)
+				.off("click", this._onTouch, this);
 			if (this._marker) {
-				this._marker.off('click', this._onClick, this);
-				this._map
-					.removeLayer(this._marker);
+				this._marker.off("click", this._onClick, this);
+				this._map.removeLayer(this._marker);
 				delete this._marker;
 			}
 
-			this._mouseMarker.off('click', this._onClick, this);
+			this._mouseMarker.off("click", this._onClick, this);
 			this._map.removeLayer(this._mouseMarker);
 			delete this._mouseMarker;
 
-			this._map.off('mousemove', this._onMouseMove, this);
+			this._map.off("mousemove", this._onMouseMove, this);
 		}
 	},
 
@@ -87,12 +84,9 @@ L.Draw.Marker = L.Draw.Feature.extend({
 		if (!this._marker) {
 			this._marker = this._createMarker(latlng);
 			// Bind to both marker and map to make sure we get the click event.
-			this._marker.on('click', this._onClick, this);
-			this._map
-				.on('click', this._onClick, this)
-				.addLayer(this._marker);
-		}
-		else {
+			this._marker.on("click", this._onClick, this);
+			this._map.on("click", this._onClick, this).addLayer(this._marker);
+		} else {
 			latlng = this._mouseMarker.getLatLng();
 			this._marker.setLatLng(latlng);
 		}
@@ -101,7 +95,7 @@ L.Draw.Marker = L.Draw.Feature.extend({
 	_createMarker: function (latlng) {
 		return new L.Marker(latlng, {
 			icon: this.options.icon,
-			zIndexOffset: this.options.zIndexOffset
+			zIndexOffset: this.options.zIndexOffset,
 		});
 	},
 
@@ -121,7 +115,9 @@ L.Draw.Marker = L.Draw.Feature.extend({
 	},
 
 	_fireCreatedEvent: function () {
-		var marker = new L.Marker.Touch(this._marker.getLatLng(), {icon: this.options.icon});
+		var marker = new L.Marker.Touch(this._marker.getLatLng(), {
+			icon: this.options.icon,
+		});
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, marker);
-	}
+	},
 });

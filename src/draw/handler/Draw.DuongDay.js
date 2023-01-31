@@ -9,7 +9,7 @@ L.Draw.DuongDay = L.Draw.Polyline.extend({
 	},
 	initialize: function (map, options) {
 		L.Draw.Polyline.prototype.initialize.call(this, map, options);
-		this.type = L.Draw.DuongDay.TYPE;
+		// this.type = L.Draw.DuongDay.TYPE;
 	},
 	_fireCreatedEvent: function () {
 		var poly = L.duongDay(this._poly.getLatLngs(), this.options);

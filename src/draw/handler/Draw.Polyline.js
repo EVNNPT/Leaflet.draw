@@ -42,7 +42,6 @@ L.Draw.Polyline = L.Draw.Feature.extend({
 		zIndexOffset: 2000, // This should be > than the highest z-index any map layers
 		factor: 1, // To change distance calculation
 		maxPoints: 0, // Once this number of points are placed, finish shape,
-		isEditPoly: true,
 	},
 
 	// @method initialize(): void

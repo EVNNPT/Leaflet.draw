@@ -19,7 +19,6 @@ L.Draw.Role = L.Draw.Feature.extend({
 		}),
 		repeatMode: false,
 		zIndexOffset: 2000, // This should be > than the highest z-index any markers,
-		isEditPoly: false,
 	},
 
 	// @method initialize(): void

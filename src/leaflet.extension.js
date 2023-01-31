@@ -60,19 +60,16 @@ L.Renderer.include({
 	},
 });
 
+// Thêm hàm/thuộc tính vào lớp Layer đã tồn tại.
 L.Layer.include({
-	_processAngle: function (angle) {
-		var ret = 0;
-		if (angle >= 0 && angle <= 90) {
-			ret = 0;
-		} else if (angle > 90 && angle <= 180) {
-			ret = 90;
-		} else if (angle > 180 && angle <= 270) {
-			ret = 180;
-		} else {
-			ret = 270;
-		}
-		return ret;
+	// Hàm trả về centerPoint của layer
+	getCenterCus: function () {
+		const pNE = this._map.project(this._bounds._northEast, this._map.getZoom());
+		const pSW = this._map.project(this._bounds._southWest, this._map.getZoom());
+		return this._map.unproject(
+			L.point((pNE.x + pSW.x) / 2, (pNE.y + pSW.y) / 2),
+			this._map.getZoom()
+		);
 	},
 });
 
@@ -356,19 +353,6 @@ L.mayBienAp = function (latlng, options) {
 };
 //#endregion
 
-// Thêm hàm/thuộc tính vào lớp Layer đã tồn tại.
-L.Layer.include({
-	// Hàm trả về centerPoint của layer
-	getCenterCus: function () {
-		const pNE = this._map.project(this._bounds._northEast, this._map.getZoom());
-		const pSW = this._map.project(this._bounds._southWest, this._map.getZoom());
-		return this._map.unproject(
-			L.point((pNE.x + pSW.x) / 2, (pNE.y + pSW.y) / 2),
-			this._map.getZoom()
-		);
-	},
-});
-
 //#region L.ThanhCai
 L.ThanhCai = L.Polyline.extend({
 	options: {
@@ -560,6 +544,19 @@ L.Role = L.Polyline.extend({
 
 L.role = function (latlng, options) {
 	return new L.Role(latlng, options);
+};
+//#endregion
+
+//#region L.Label
+L.Label = L.Marker.extend({
+	initialize: function (latlng, options) {
+		L.setOptions(this, options);
+		L.Marker.prototype.initialize.call(this, latlng, options);
+	},
+});
+
+L.label = function (latlng, options) {
+	return new L.Label(latlng, options);
 };
 //#endregion
 

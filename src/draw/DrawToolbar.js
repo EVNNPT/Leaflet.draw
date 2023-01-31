@@ -13,6 +13,7 @@ L.DrawToolbar = L.Toolbar.extend({
 		mayBienAp: {},
 		duongDay: {},
 		polyline: {},
+		label: {},
 		// polygon: {},
 		// rectangle: {},
 		// circle: {},
@@ -60,10 +61,15 @@ L.DrawToolbar = L.Toolbar.extend({
 				title: L.drawLocal.draw.toolbar.buttons.duongDay,
 			},
 			{
-				enabled: this.options.polyline,
-				handler: new L.Draw.Polyline(map, this.options.polyline),
-				title: L.drawLocal.draw.toolbar.buttons.polyline,
+				enabled: this.options.label,
+				handler: new L.Draw.Label(map, this.options.label),
+				title: L.drawLocal.draw.toolbar.buttons.label,
 			},
+			// {
+			// 	enabled: this.options.polyline,
+			// 	handler: new L.Draw.Polyline(map, this.options.polyline),
+			// 	title: L.drawLocal.draw.toolbar.buttons.polyline,
+			// },
 			// {
 			// 	enabled: this.options.polygon,
 			// 	handler: new L.Draw.Polygon(map, this.options.polygon),
