@@ -65,8 +65,7 @@ L.Draw.Label = L.Draw.Marker.extend({
 	},
 
 	_onClick: function () {
-		// let mapContainer = this._map.getContainer();
-		// mapContainer.style = "opacity: 0.5";
+		let mapContainer = this._map.getContainer();
 
 		var divTop = document.createElement("DIV");
 		divTop.className = "div-top";
@@ -217,13 +216,6 @@ L.Draw.Label = L.Draw.Marker.extend({
 		});
 
 		btnOK.addEventListener("click", function () {
-			// var textVal = inputText.value;
-			// var fontVal = comboboxFont.value;
-			// var fontSize = inputSize.value;
-			// var colorVal = inputColor.value;
-			// var boldVal = isBold;
-			// var italicVal = isItalic;
-
 			var obj = {
 				textVal: inputText.value,
 				fontVal: comboboxFont.value,
@@ -276,7 +268,33 @@ L.Draw.Label = L.Draw.Marker.extend({
 	},
 
 	_fireCreatedEvent: function (obj) {
-		const img = "data:image/svg+xml," + encodeURIComponent(this._svgText(obj));
+		var canvas = document.createElement("CANVAS");
+		var ctx = canvas.getContext("2d");
+		// ctx.font = `${obj.boldVal ? "bold" : ""}  ${
+		// 	obj.italicVal ? "italic" : ""
+		// } ${obj.fontSize}px ${obj.fontVal};`;
+		ctx.font = `${obj.boldVal ? "bold" : ""} ${obj.italicVal ? "italic" : ""} ${
+			obj.fontSize
+		}px ${obj.fontVal}`;
+		ctx.fillStyle = obj.colorVal;
+
+		var textWidth = ctx.measureText(obj.textVal).width;
+		var textHeight = 30;
+
+		canvas.width = textWidth + 20;
+		canvas.height = obj.fontSize;
+
+		ctx.font = `${obj.boldVal ? "bold" : ""} ${obj.italicVal ? "italic" : ""} ${
+			obj.fontSize
+		}px ${obj.fontVal}`;
+		ctx.fillStyle = obj.colorVal;
+		ctx.fillText(obj.textVal, 10, obj.fontSize);
+
+		// ctx.lineWidth = 5;
+		// ctx.strokeStyle = "red";
+		// ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+		const img = canvas.toDataURL("image/png");
 		console.log(img);
 		const icon = L.icon({
 			iconUrl: img,
@@ -285,22 +303,23 @@ L.Draw.Label = L.Draw.Marker.extend({
 		});
 		var marker = new L.Marker.Touch(this._mouseMarker.getLatLng(), {
 			icon: icon,
+			rotationAngle: 45,
 		});
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, marker);
 	},
 
 	_svgText: function (obj) {
 		return (
-			`<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' style='border: 1px solid red;'>` +
+			`<svg width='${obj.width}' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' style='box-sizing: border-box; border: 1px solid red;'>` +
 			`<style>` +
-			`.Rrrrr {
+			`.font {
 				font: ${obj.boldVal ? "bold" : ""}  ${obj.italicVal ? "italic" : ""} ${
 				obj.fontSize
 			}px ${obj.fontVal};
 				fill: ${obj.colorVal};
 			  }` +
 			`</style>` +
-			`<text dominant-baseline="hanging" class='Rrrrr' transform="rotate(45,100,100)">` +
+			`<text dominant-baseline="hanging" class='font'>` +
 			obj.textVal +
 			"</text>" +
 			"</svg>"
