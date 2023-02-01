@@ -142,6 +142,14 @@ L.EditToolbar.Edit = L.Handler.extend({
 					options.original.chieuDai = options.chieuDai;
 					options.original.gocXoay = options.gocXoay;
 				} else if (layer instanceof L.DuongDay) {
+				} else if (layer instanceof L.Label) {
+					options.original.text = options.text;
+					options.original.fontSize = options.fontSize;
+					options.original.fontFamily = options.fontFamily;
+					options.original.fontColor = options.fontColor;
+					options.original.isBold = options.isBold;
+					options.original.isItalic = options.isItalic;
+					options.original.gocXoay = options.gocXoay;
 				}
 				editedLayers.addLayer(layer);
 				layer.edited = false;
@@ -186,6 +194,20 @@ L.EditToolbar.Edit = L.Handler.extend({
 				this._uneditedLayerProps[id] = {
 					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs()),
 				};
+			} else if (layer instanceof L.Label) {
+				const latLng = layer.getLatLng();
+				this._uneditedLayerProps[id] = {
+					latlng: L.latLng(latLng.lat, latLng.lng),
+					options: {
+						text: options.text,
+						fontSize: options.fontSize,
+						fontFamily: options.fontFamily,
+						fontColor: options.fontColor,
+						isBold: options.isBold,
+						isItalic: options.isItalic,
+						gocXoay: options.gocXoay,
+					},
+				};
 			}
 		}
 	},
@@ -213,6 +235,8 @@ L.EditToolbar.Edit = L.Handler.extend({
 			) {
 				layer.setLatLngs(this._uneditedLayerProps[id].latlngs);
 			} else if (layer instanceof L.MayBienAp) {
+				layer.setLatLng(this._uneditedLayerProps[id].latlng);
+			} else if (layer instanceof L.Label) {
 				layer.setLatLng(this._uneditedLayerProps[id].latlng);
 			}
 			layer.fire("revert-edited", { layer: layer });

@@ -549,9 +549,48 @@ L.role = function (latlng, options) {
 
 //#region L.Label
 L.Label = L.Marker.extend({
+	options: {
+		text: "",
+		fontSize: 14,
+		fontFamily: "Times New Roman",
+		fontColor: "black",
+		isBold: false,
+		isItalic: false,
+		gocXoay: 90,
+	},
+
 	initialize: function (latlng, options) {
 		L.setOptions(this, options);
-		L.Marker.prototype.initialize.call(this, latlng, options);
+		const icon = L.icon({
+			iconUrl: this._createImage(),
+		});
+		L.Marker.prototype.initialize.call(this, latlng, {
+			icon: icon,
+			rotationAngle: this.options.gocXoay,
+		});
+	},
+
+	_createImage: function () {
+		var canvas = document.createElement("CANVAS");
+		var ctx = canvas.getContext("2d");
+		var font = `${this.options.isBold ? "bold" : ""} ${
+			this.options.isItalic ? "italic" : ""
+		} ${this.options.fontSize}px ${this.options.fontFamily}`;
+		ctx.font = font;
+		canvas.width = ctx.measureText(this.options.text).width + 20;
+		canvas.height = this.options.fontSize + 20;
+		ctx.font = font;
+		ctx.fillStyle = this.options.fontColor;
+		ctx.fillText(this.options.text, 10, this.options.fontSize);
+		return canvas.toDataURL("image/png");
+	},
+
+	rotate: function (latlng) {
+		const map = this._map;
+		const centerPoint = this.getLatLng();
+		const angle = L.GeometryUtil.angle(map, centerPoint, latlng);
+		this.options.gocXoay = angle;
+		// this.setLatLngs(this._roleLatLngs(centerPoint));
 	},
 });
 

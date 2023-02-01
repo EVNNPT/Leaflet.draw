@@ -61,6 +61,7 @@
 
 		<script src="../../src/leaflet.snap.js"></script>
 		<script src="../../src/leaflet.geometryutil.js"></script>
+		<script src="../../src/leaflet.rotatedMarker.js"></script>
 
 		<style>
 			* {
@@ -91,11 +92,12 @@
 				left: 0;
 				width: 100%;
 				height: 100%;
-				z-index: -1;
+				z-index: 1000;
+				display: none;
 			}
 
 			.form-label {
-				position: relative;
+				position: absolute;
 				top: 50%;
 				left: 50%;
 				margin-top: -75px;
@@ -111,7 +113,7 @@
 	<body>
 		<div id="map"></div>
 		<div id="divTop" class="div-top">
-			<form class="form-label">
+			<form id="formLabel" class="form-label">
 				<table>
 					<tbody>
 						<tr>
@@ -145,9 +147,17 @@
 						<tr>
 							<td></td>
 							<td>
-								<button type="button" style="width: 50px; font-weight: bold">
+								<button
+									id="btnBold"
+									type="button"
+									style="width: 50px; font-weight: bold"
+								>
 									Bold</button
-								><button type="button" style="width: 50px; font-style: italic">
+								><button
+									id="btnItalic"
+									type="button"
+									style="width: 50px; font-style: italic"
+								>
 									Italic
 								</button>
 							</td>
@@ -155,8 +165,10 @@
 						<tr>
 							<td></td>
 							<td style="padding-top: 10px">
-								<button type="button" style="width: 80px">OK</button
-								><button type="button" style="width: 80px">Cancel</button>
+								<button id="btnOK" type="button" style="width: 80px">OK</button
+								><button id="btnCancel" type="button" style="width: 80px">
+									Cancel
+								</button>
 							</td>
 						</tr>
 					</tbody>
