@@ -3,9 +3,9 @@
 	<head>
 		<title>Leaflet.draw vector editing handlers</title>
 
-		<link rel="stylesheet" href="../../src/jquery/jquery-ui.css" />
+		<!-- <link rel="stylesheet" href="../../src/jquery/jquery-ui.css" />
 		<script src="../../src/jquery/jquery.js"></script>
-		<script src="../../src/jquery/jquery-ui.js"></script>
+		<script src="../../src/jquery/jquery-ui.js"></script> -->
 
 		<script src="../../src/leaflet-src.js"></script>
 		<link rel="stylesheet" href="libs/leaflet.css" />
@@ -112,69 +112,6 @@
 
 	<body>
 		<div id="map"></div>
-		<div id="divTop" class="div-top">
-			<form id="formLabel" class="form-label">
-				<table>
-					<tbody>
-						<tr>
-							<td><label for="text-val">Text: </label></td>
-							<td><input id="text-val" type="text" /></td>
-						</tr>
-						<tr>
-							<td><label for="size-val">Font size: </label></td>
-							<td><input id="size-val" type="number" value="14" /></td>
-						</tr>
-						<tr>
-							<td><label for="font-val">Font: </label></td>
-							<td>
-								<select id="font-val">
-									<option value="Times New Roman">Times New Roman</option>
-									<option value="Georgia">Georgia</option>
-									<option value="Garamond">Garamond</option>
-									<option value="Arial">Arial</option>
-									<option value="Verdana">Verdana</option>
-									<option value="Helvetica">Helvetica</option>
-									<option value="Courier New">Courier New</option>
-									<option value="Lucida Console">Lucida Console</option>
-									<option value="Monaco">Monaco</option>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td><label for="color-val">Color: </label></td>
-							<td><input id="color-val" type="color" value="14" /></td>
-						</tr>
-						<tr>
-							<td></td>
-							<td>
-								<button
-									id="btnBold"
-									type="button"
-									style="width: 50px; font-weight: bold"
-								>
-									Bold</button
-								><button
-									id="btnItalic"
-									type="button"
-									style="width: 50px; font-style: italic"
-								>
-									Italic
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td style="padding-top: 10px">
-								<button id="btnOK" type="button" style="width: 80px">OK</button
-								><button id="btnCancel" type="button" style="width: 80px">
-									Cancel
-								</button>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</form>
-		</div>
 		<script>
 			var map = new L.Map("map", {
 					center: new L.LatLng(0, 0),
@@ -185,6 +122,7 @@
 				drawnItems = L.featureGroup().addTo(map),
 				snapLayerA = L.featureGroup().addTo(map),
 				snapLayerB = L.featureGroup().addTo(map);
+			var dialogFormLabel = L.dialogLabelClass(map);
 			L.control
 				.layers(
 					{},
@@ -233,7 +171,7 @@
 				label: {
 					guideLayers: [snapLayerA, snapLayerB],
 					snapDistance: 10,
-					repeatMode: true,
+					dialogFormLabel: dialogFormLabel,
 				},
 				duongDay: {
 					guideLayers: [snapLayerA, snapLayerB],
@@ -332,6 +270,9 @@
 			// 	layer: snapLayerA,
 			// 	zoom: 18,
 			// });
+			L.Edit.Label.addInitHook(function () {
+				this.options.dialogFormLabel = dialogFormLabel;
+			});
 		</script>
 	</body>
 </html>

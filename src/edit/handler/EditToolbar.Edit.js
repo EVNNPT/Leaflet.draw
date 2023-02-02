@@ -237,7 +237,10 @@ L.EditToolbar.Edit = L.Handler.extend({
 			} else if (layer instanceof L.MayBienAp) {
 				layer.setLatLng(this._uneditedLayerProps[id].latlng);
 			} else if (layer instanceof L.Label) {
+				L.setOptions(layer, this._uneditedLayerProps[id].options);
 				layer.setLatLng(this._uneditedLayerProps[id].latlng);
+				layer.setRotationAngle(this._uneditedLayerProps[id].options.gocXoay);
+				layer.updateImage();
 			}
 			layer.fire("revert-edited", { layer: layer });
 		}

@@ -1,6 +1,11 @@
 var deps = {
 	Core: {
-		src: ["leaflet.extension.js", "Leaflet.draw.js", "Leaflet.Draw.Event.js"],
+		src: [
+			"leaflet.rotatedMarker.js",
+			"leaflet.extension.js",
+			"Leaflet.draw.js",
+			"Leaflet.Draw.Event.js",
+		],
 		desc: "The core of the plugin. Currently only includes the version.",
 	},
 
@@ -18,6 +23,7 @@ var deps = {
 			"draw/handler/Draw.ThanhCai.js",
 			"draw/handler/Draw.Role.js",
 			"draw/handler/Draw.MayBienAp.js",
+			"draw/handler/Draw.Label.js",
 		],
 		desc: "Drawing handlers for: polylines, polygons, rectangles, circles, circlemarkers and markers.",
 		deps: ["Core"],
@@ -36,6 +42,7 @@ var deps = {
 			"edit/handler/Edit.Role.js",
 			"edit/handler/Edit.MayBienAp.js",
 			"edit/handler/Edit.DuongDay.js",
+			"edit/handler/Edit.Label.js",
 		],
 		desc: "Editing handlers for: polylines, polygons, rectangles, circlemarkers and circles.",
 		deps: ["Core"],

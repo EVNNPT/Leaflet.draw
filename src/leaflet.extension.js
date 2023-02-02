@@ -1,3 +1,144 @@
+L.DialogLabelClass = L.Class.extend({
+	options: {
+		html: `
+			<div id="divTop" class="div-top">
+				<form id="formLabel" class="form-label">
+					<table>
+						<tbody>
+							<tr>
+								<td><label for="text-val">Text: </label></td>
+								<td><input id="text-val" type="text" /></td>
+							</tr>
+							<tr>
+								<td><label for="size-val">Font size: </label></td>
+								<td><input id="size-val" type="number" value="14" /></td>
+							</tr>
+							<tr>
+								<td><label for="font-val">Font: </label></td>
+								<td>
+									<select id="font-val">
+										<option value="Times New Roman">Times New Roman</option>
+										<option value="Georgia">Georgia</option>
+										<option value="Garamond">Garamond</option>
+										<option value="Arial">Arial</option>
+										<option value="Verdana">Verdana</option>
+										<option value="Helvetica">Helvetica</option>
+										<option value="Courier New">Courier New</option>
+										<option value="Lucida Console">Lucida Console</option>
+										<option value="Monaco">Monaco</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td><label for="color-val">Color: </label></td>
+								<td><input id="color-val" type="color" value="14" /></td>
+							</tr>
+							<tr>
+								<td></td>
+								<td>
+									<button
+										id="btnBold"
+										type="button"
+										style="width: 50px; font-weight: bold"
+									>
+										Bold</button
+									><button
+										id="btnItalic"
+										type="button"
+										style="width: 50px; font-style: italic"
+									>
+										Italic
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td></td>
+								<td style="padding-top: 10px">
+									<button id="btnOK" type="button" style="width: 80px">OK</button
+									><button id="btnCancel" type="button" style="width: 80px">
+										Cancel
+									</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</form>
+			</div>
+		`,
+	},
+
+	initialize: function (map, options) {
+		this._map = map;
+		L.setOptions(this, options);
+		this._render();
+		this._inputText = document.getElementById("text-val");
+		this._inputSize = document.getElementById("size-val");
+		this._comboboxFont = document.getElementById("font-val");
+		this._inputColor = document.getElementById("color-val");
+		this._btnBold = document.getElementById("btnBold");
+		this._btnItalic = document.getElementById("btnItalic");
+		this._btnConfirm = document.getElementById("btnOK");
+		this._btnCancel = document.getElementById("btnCancel");
+		this._addEventListener();
+	},
+
+	_render: function () {
+		this._map
+			.getContainer()
+			.parentElement.insertAdjacentHTML("afterbegin", this.options.html);
+	},
+
+	_addEventListener: function () {
+		var self = this;
+
+		var isBold = false;
+		this._btnBold.addEventListener("click", function () {
+			isBold = !isBold;
+		});
+		var isItalic = false;
+		this._btnItalic.addEventListener("click", function () {
+			isItalic = !isItalic;
+		});
+
+		this._btnConfirm.addEventListener("click", function () {
+			self._map.fire(L.Draw.Event.FORMLABELCONFIRM, {
+				text: self._inputText.value,
+				fontSize: Number.parseInt(self._inputSize.value),
+				fontFamily: self._comboboxFont.value,
+				fontColor: self._inputColor.value,
+				isBold: isBold,
+				isItalic: isItalic,
+			});
+		});
+		this._btnCancel.addEventListener("click", function () {
+			self._map.fire(L.Draw.Event.FORMLABELCANCEL);
+		});
+	},
+
+	showDialog: function () {
+		var divTop = document.getElementById("divTop");
+		L.DomUtil.setOpacity(this._map.getContainer(), 0.5);
+		divTop.style = "display: block";
+	},
+
+	hideDialog: function () {
+		var divTop = document.getElementById("divTop");
+		L.DomUtil.setOpacity(this._map.getContainer(), 1);
+		divTop.style = "display: none";
+	},
+
+	setValue: function (formData) {
+		this._inputText.value = formData.text;
+		this._inputSize.value = formData.fontSize;
+		this._comboboxFont.value = formData.fontFamily;
+		this._inputColor.value = formData.fontColor;
+	},
+});
+
+L.dialogLabelClass = function (options) {
+	return new L.DialogLabelClass(options);
+};
+
 L.Renderer.include({
 	_updateMayBienAp: function (layer) {
 		const o1 = layer._xuLy(layer._getLatLngI1(), layer._getRadiusR1());
@@ -556,13 +697,19 @@ L.Label = L.Marker.extend({
 		fontColor: "black",
 		isBold: false,
 		isItalic: false,
-		gocXoay: 90,
+		gocXoay: 0,
+		distanceRotateMarker: 25,
 	},
 
 	initialize: function (latlng, options) {
 		L.setOptions(this, options);
+		this._results = this._createImage();
+		const img = this._results[0];
+		const width = this._results[1];
+		const height = this._results[2];
 		const icon = L.icon({
-			iconUrl: this._createImage(),
+			iconUrl: img,
+			iconAnchor: [width / 2, height / 2],
 		});
 		L.Marker.prototype.initialize.call(this, latlng, {
 			icon: icon,
@@ -570,19 +717,47 @@ L.Label = L.Marker.extend({
 		});
 	},
 
+	updateImage: function () {
+		this._results = this._createImage();
+		const img = this._results[0];
+		const width = this._results[1];
+		const height = this._results[2];
+
+		if (L.DomUtil.hasClass(this._icon, "leaflet-edit-marker-selected")) {
+			var icon = L.icon({
+				iconUrl: img,
+				iconAnchor: [width / 2, height / 2],
+				className: "leaflet-edit-marker-selected",
+			});
+			this.setIcon(icon);
+		} else {
+			var icon = L.icon({
+				iconUrl: img,
+				iconAnchor: [width / 2, height / 2],
+			});
+			this.setIcon(icon);
+		}
+	},
+
 	_createImage: function () {
 		var canvas = document.createElement("CANVAS");
 		var ctx = canvas.getContext("2d");
-		var font = `${this.options.isBold ? "bold" : ""} ${
-			this.options.isItalic ? "italic" : ""
-		} ${this.options.fontSize}px ${this.options.fontFamily}`;
+		var font = "";
+		if (this.options.isBold) {
+			font += "bold ";
+		}
+		if (this.options.isItalic) {
+			font += "italic ";
+		}
+		font += this.options.fontSize + "px ";
+		font += this.options.fontFamily;
 		ctx.font = font;
 		canvas.width = ctx.measureText(this.options.text).width + 20;
 		canvas.height = this.options.fontSize + 20;
 		ctx.font = font;
 		ctx.fillStyle = this.options.fontColor;
 		ctx.fillText(this.options.text, 10, this.options.fontSize);
-		return canvas.toDataURL("image/png");
+		return [canvas.toDataURL("image/png"), canvas.width, canvas.height];
 	},
 
 	rotate: function (latlng) {
@@ -590,7 +765,16 @@ L.Label = L.Marker.extend({
 		const centerPoint = this.getLatLng();
 		const angle = L.GeometryUtil.angle(map, centerPoint, latlng);
 		this.options.gocXoay = angle;
-		// this.setLatLngs(this._roleLatLngs(centerPoint));
+		this.setRotationAngle(angle);
+	},
+
+	getRotateMarker: function () {
+		const centerPoint = this.getLatLng();
+		return L.GeometryUtil.destination(
+			centerPoint,
+			this.options.gocXoay,
+			this.options.distanceRotateMarker
+		);
 	},
 });
 

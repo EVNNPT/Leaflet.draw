@@ -1,7 +1,7 @@
 /**
- * @class L.Draw.Marker
- * @aka Draw.Marker
- * @inherits L.Draw.Feature
+ * @class L.Draw.Label
+ * @aka Draw.Label
+ * @inherits L.Draw.Marker
  */
 L.Draw.Label = L.Draw.Marker.extend({
 	statics: {
@@ -23,6 +23,7 @@ L.Draw.Label = L.Draw.Marker.extend({
 			inputSize: "size-val",
 			inputColor: "color-val",
 		},
+		dialogFormLabel: null,
 	},
 
 	// @method initialize(): void
@@ -60,51 +61,30 @@ L.Draw.Label = L.Draw.Marker.extend({
 			this._map.on("mousemove", this._onMouseMove, this);
 			this._map.on("click", this._onTouch, this);
 		}
+
+		this._map.on(L.Draw.Event.FORMLABELCONFIRM, this._confirm, this);
+		this._map.on(L.Draw.Event.FORMLABELCANCEL, this._cancel, this);
+	},
+
+	removeHooks: function () {
+		L.Draw.Marker.prototype.removeHooks.call(this);
+		this._map.off(L.Draw.Event.FORMLABELCONFIRM, this._confirm, this);
+		this._map.off(L.Draw.Event.FORMLABELCANCEL, this._cancel, this);
+	},
+
+	_cancel: function (e) {
+		this.options.dialogFormLabel.hideDialog();
+		this.disable();
+	},
+
+	_confirm: function (e) {
+		this.options.dialogFormLabel.hideDialog();
+		this._fireCreatedEvent(e);
+		this.disable();
 	},
 
 	_onClick: function () {
-		var self = this;
-		var inputText = document.getElementById(self.options.forms.inputText);
-		inputText.value = "";
-		var comboboxFont = document.getElementById(self.options.forms.comboboxFont);
-		var inputSize = document.getElementById(self.options.forms.inputSize);
-		var inputColor = document.getElementById(self.options.forms.inputColor);
-
-		L.DomUtil.setOpacity(this._map.getContainer(), 0.5);
-		var divTop = document.getElementById(this.options.forms.id);
-		divTop.style = "display: block";
-		var btnBold = document.getElementById(this.options.forms.btnBold);
-		var btnItalic = document.getElementById(this.options.forms.btnBold);
-		var isBold = false;
-		btnBold.addEventListener("click", function () {
-			isBold = !isBold;
-		});
-		var isItalic = false;
-		btnItalic.addEventListener("click", function () {
-			isItalic = !isItalic;
-		});
-		var btnOK = document.getElementById(this.options.forms.btnOK);
-		var btnCancel = document.getElementById(this.options.forms.btnCancel);
-
-		btnCancel.addEventListener("click", function () {
-			self.disable();
-			divTop.style = "display: none";
-			L.DomUtil.setOpacity(self._map.getContainer(), 1);
-		});
-		btnOK.addEventListener("click", function () {
-			var obj = {
-				text: inputText.value,
-				fontSize: Number.parseInt(inputSize.value),
-				fontFamily: comboboxFont.value,
-				fontColor: inputColor.value,
-				isBold: isBold,
-				isItalic: isItalic,
-			};
-			self._fireCreatedEvent(obj);
-			self.disable();
-			divTop.style = "display: none";
-			L.DomUtil.setOpacity(self._map.getContainer(), 1);
-		});
+		this.options.dialogFormLabel.showDialog();
 	},
 
 	_onTouch: function (e) {
@@ -119,10 +99,8 @@ L.Draw.Label = L.Draw.Marker.extend({
 		this._mouseMarker.setLatLng(latlng);
 	},
 
-	_createMarker: function (latlng) {},
-
-	_fireCreatedEvent: function (obj) {
-		var label = L.label(this._mouseMarker.getLatLng(), obj);
+	_fireCreatedEvent: function (options) {
+		var label = L.label(this._mouseMarker.getLatLng(), options);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, label);
 	},
 });

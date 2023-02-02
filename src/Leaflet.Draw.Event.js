@@ -193,3 +193,6 @@ L.Draw.Event.TOOLBARCLOSED = "draw:toolbarclosed";
  * Triggered when a marker is right clicked.
  */
 L.Draw.Event.MARKERCONTEXT = "draw:markercontext";
+
+L.Draw.Event.FORMLABELCONFIRM = "draw:formlabelconfirm";
+L.Draw.Event.FORMLABELCANCEL = "draw:formlabelcancel";
