@@ -25,9 +25,6 @@ L.Edit.Label = L.Edit.Marker.extend({
 		this._bindMarker(this._rotateMarker);
 		this._bindMarker(this._marker);
 		this._marker._map.addLayer(this._markerGroup);
-
-		this._marker._map.on(L.Draw.Event.FORMLABELCONFIRM, this._confirm, this);
-		this._marker._map.on(L.Draw.Event.FORMLABELCANCEL, this._cancel, this);
 	},
 
 	removeHooks: function () {
@@ -36,9 +33,6 @@ L.Edit.Label = L.Edit.Marker.extend({
 		this._unbindMarker(this._marker);
 		this._marker._map.removeLayer(this._markerGroup);
 		delete this._markerGroup;
-
-		this._marker._map.off(L.Draw.Event.FORMLABELCONFIRM, this._confirm, this);
-		this._marker._map.off(L.Draw.Event.FORMLABELCANCEL, this._cancel, this);
 	},
 
 	_cancel: function (e) {
@@ -80,11 +74,6 @@ L.Edit.Label = L.Edit.Marker.extend({
 			.on("dragstart", this._onMarkerDragStart, this)
 			.on("drag", this._onMarkerDrag, this)
 			.on("dragend", this._onMarkerDragEnd, this);
-		// .on("touchstart", this._onTouchStart, this)
-		// .on("touchmove", this._onTouchMove, this)
-		// .on("MSPointerMove", this._onTouchMove, this)
-		// .on("touchend", this._onTouchEnd, this)
-		// .on("MSPointerUp", this._onTouchEnd, this);
 	},
 
 	_unbindMarker: function (marker) {
@@ -98,7 +87,13 @@ L.Edit.Label = L.Edit.Marker.extend({
 
 	_onClick: function (e) {
 		this.options.dialogFormLabel.setValue(this._marker.options);
+		// this.options.dialogFormLabel.setMarker(this._marker);
 		this.options.dialogFormLabel.showDialog();
+		this.options.dialogFormLabel.subscribe(this._confirmOrCancel);
+	},
+
+	_confirmOrCancel: function (e) {
+		console.log("_confirmOrCancel");
 	},
 
 	_onMarkerDragStart: function (e) {

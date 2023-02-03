@@ -1,91 +1,146 @@
 L.DialogLabelClass = L.Class.extend({
 	options: {
-		html: `
-			<div id="divTop" class="div-top">
-				<form id="formLabel" class="form-label">
-					<table>
-						<tbody>
-							<tr>
-								<td><label for="text-val">Text: </label></td>
-								<td><input id="text-val" type="text" /></td>
-							</tr>
-							<tr>
-								<td><label for="size-val">Font size: </label></td>
-								<td><input id="size-val" type="number" value="14" /></td>
-							</tr>
-							<tr>
-								<td><label for="font-val">Font: </label></td>
-								<td>
-									<select id="font-val">
-										<option value="Times New Roman">Times New Roman</option>
-										<option value="Georgia">Georgia</option>
-										<option value="Garamond">Garamond</option>
-										<option value="Arial">Arial</option>
-										<option value="Verdana">Verdana</option>
-										<option value="Helvetica">Helvetica</option>
-										<option value="Courier New">Courier New</option>
-										<option value="Lucida Console">Lucida Console</option>
-										<option value="Monaco">Monaco</option>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td><label for="color-val">Color: </label></td>
-								<td><input id="color-val" type="color" value="14" /></td>
-							</tr>
-							<tr>
-								<td></td>
-								<td>
-									<button
-										id="btnBold"
-										type="button"
-										style="width: 50px; font-weight: bold"
-									>
-										Bold</button
-									><button
-										id="btnItalic"
-										type="button"
-										style="width: 50px; font-style: italic"
-									>
-										Italic
-									</button>
-								</td>
-							</tr>
-							<tr>
-								<td></td>
-								<td style="padding-top: 10px">
-									<button id="btnOK" type="button" style="width: 80px">OK</button
-									><button id="btnCancel" type="button" style="width: 80px">
-										Cancel
-									</button>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</form>
-			</div>
-		`,
+		divTopClass: "div-top",
+		formLabelClass: "form-label",
+		iText: "text-val",
+		iSize: "size-val",
+		sFont: "font-val",
+		iColor: "color-val",
+		btnBold: "btn-bold",
+		btnItalic: "btn-italic",
+		btnOK: "btn-ok",
+		btnCancel: "btn-cancel",
+		fonts: [
+			"Times New Roman",
+			"Georgia",
+			"Garamond",
+			"Arial",
+			"Verdana",
+			"Helvetica",
+			"Courier New",
+			"Lucida Console",
+			"Monaco",
+		],
 	},
 
 	initialize: function (map, options) {
+		this._handlers = [];
 		this._map = map;
 		L.setOptions(this, options);
 		this._render();
-		this._inputText = document.getElementById("text-val");
-		this._inputSize = document.getElementById("size-val");
-		this._comboboxFont = document.getElementById("font-val");
-		this._inputColor = document.getElementById("color-val");
-		this._btnBold = document.getElementById("btnBold");
-		this._btnItalic = document.getElementById("btnItalic");
-		this._btnConfirm = document.getElementById("btnOK");
-		this._btnCancel = document.getElementById("btnCancel");
 		this._addEventListener();
+		console.log("initialize");
+	},
+
+	_createDom: function () {
+		// DIV TOP
+		this._divTop = document.createElement("DIV");
+		this._divTop.className = this.options.divTopClass;
+		// FORM
+		var formLabel = document.createElement("FORM");
+		formLabel.className = this.options.formLabelClass;
+		// Table Layout
+		var tableLayout = document.createElement("TABLE");
+		var row1 = tableLayout.insertRow(0);
+		var cell11 = row1.insertCell(0);
+		var cell12 = row1.insertCell(1);
+		var row2 = tableLayout.insertRow(1);
+		var cell21 = row2.insertCell(0);
+		var cell22 = row2.insertCell(1);
+		var row3 = tableLayout.insertRow(2);
+		var cell31 = row3.insertCell(0);
+		var cell32 = row3.insertCell(1);
+		var row4 = tableLayout.insertRow(3);
+		var cell41 = row4.insertCell(0);
+		var cell42 = row4.insertCell(1);
+		var row5 = tableLayout.insertRow(4);
+		var cell51 = row5.insertCell(0);
+		var cell52 = row5.insertCell(1);
+		var row6 = tableLayout.insertRow(5);
+		var cell61 = row6.insertCell(0);
+		var cell62 = row6.insertCell(1);
+		// Input Text
+		var lTextLabel = document.createElement("LABEL");
+		lTextLabel.setAttribute("for", this.options.iText);
+		lTextLabel.appendChild(document.createTextNode("Text: "));
+		this._inputText = document.createElement("INPUT");
+		this._inputText.id = this.options.iText;
+		this._inputText.setAttribute("type", "text");
+		cell11.appendChild(lTextLabel);
+		cell12.appendChild(this._inputText);
+		// Input Size
+		var lFontSize = document.createElement("LABEL");
+		lFontSize.setAttribute("for", this.options.iSize);
+		lFontSize.appendChild(document.createTextNode("Font size: "));
+		this._inputSize = document.createElement("INPUT");
+		this._inputSize.id = this.options.iSize;
+		this._inputSize.setAttribute("type", "number");
+		this._inputSize.setAttribute("value", 14);
+		cell21.appendChild(lFontSize);
+		cell22.appendChild(this._inputSize);
+		// Combobox Font
+		var lFontCombo = document.createElement("LABEL");
+		lFontCombo.setAttribute("for", this.options.sFont);
+		lFontCombo.appendChild(document.createTextNode("Font: "));
+		this._comboboxFont = document.createElement("SELECT");
+		this._comboboxFont.id = this.options.sFont;
+		for (var i = 0; i < this.options.fonts.length; i++) {
+			var option = document.createElement("OPTION");
+			option.text = this.options.fonts[i];
+			option.value = this.options.fonts[i];
+			this._comboboxFont.add(option);
+		}
+		cell31.appendChild(lFontCombo);
+		cell32.appendChild(this._comboboxFont);
+		// Input Color
+		var lFontColor = document.createElement("LABEL");
+		lFontColor.setAttribute("for", this.options.iColor);
+		lFontColor.appendChild(document.createTextNode("Color: "));
+		this._inputColor = document.createElement("INPUT");
+		this._inputColor.id = this.options.iColor;
+		this._inputColor.setAttribute("type", "color");
+		cell41.appendChild(lFontColor);
+		cell42.appendChild(this._inputColor);
+		// Btn Bold vs Italic
+		this._btnBold = document.createElement("BUTTON");
+		this._btnBold.id = this.options.btnBold;
+		this._btnBold.setAttribute("type", "button");
+		this._btnBold.style = "width: 50px; font-weight: bold";
+		this._btnBold.innerText = "Bold";
+
+		this._btnItalic = document.createElement("BUTTON");
+		this._btnItalic.id = this.options.btnItalic;
+		this._btnItalic.setAttribute("type", "button");
+		this._btnItalic.style = "width: 50px; font-weight: italic";
+		this._btnItalic.innerText = "Italic";
+
+		cell52.appendChild(this._btnBold);
+		cell52.appendChild(this._btnItalic);
+		// Btn OK vs Cancel
+		this._btnConfirm = document.createElement("BUTTON");
+		this._btnConfirm.id = this.options.btnOK;
+		this._btnConfirm.setAttribute("type", "button");
+		this._btnConfirm.style = "width: 80px";
+		this._btnConfirm.innerText = "OK";
+
+		this._btnCancel = document.createElement("BUTTON");
+		this._btnCancel.id = this.options.btnCancel;
+		this._btnCancel.setAttribute("type", "button");
+		this._btnCancel.style = "width: 80px";
+		this._btnCancel.innerText = "Cancel";
+
+		cell62.appendChild(this._btnConfirm);
+		cell62.appendChild(this._btnCancel);
+
+		//
+		formLabel.appendChild(tableLayout);
+		this._divTop.appendChild(formLabel);
+
+		return this._divTop;
 	},
 
 	_render: function () {
-		this._map
-			.getContainer()
-			.parentElement.insertAdjacentHTML("afterbegin", this.options.html);
+		this._map.getContainer().parentElement.appendChild(this._createDom());
 	},
 
 	_addEventListener: function () {
@@ -101,14 +156,16 @@ L.DialogLabelClass = L.Class.extend({
 		});
 
 		this._btnConfirm.addEventListener("click", function () {
-			self._map.fire(L.Draw.Event.FORMLABELCONFIRM, {
+			var formData = {
 				text: self._inputText.value,
 				fontSize: Number.parseInt(self._inputSize.value),
 				fontFamily: self._comboboxFont.value,
 				fontColor: self._inputColor.value,
 				isBold: isBold,
 				isItalic: isItalic,
-			});
+			};
+			self._map.fire(L.Draw.Event.FORMLABELCONFIRM, formData);
+			self.fire();
 		});
 		this._btnCancel.addEventListener("click", function () {
 			self._map.fire(L.Draw.Event.FORMLABELCANCEL);
@@ -116,15 +173,15 @@ L.DialogLabelClass = L.Class.extend({
 	},
 
 	showDialog: function () {
-		var divTop = document.getElementById("divTop");
 		L.DomUtil.setOpacity(this._map.getContainer(), 0.5);
-		divTop.style = "display: block";
+		this._divTop.style = "display: block";
+		this._inputText.focus();
 	},
 
 	hideDialog: function () {
-		var divTop = document.getElementById("divTop");
 		L.DomUtil.setOpacity(this._map.getContainer(), 1);
-		divTop.style = "display: none";
+		this._divTop.style = "display: none";
+		this._map.getContainer().focus();
 	},
 
 	setValue: function (formData) {
@@ -132,6 +189,25 @@ L.DialogLabelClass = L.Class.extend({
 		this._inputSize.value = formData.fontSize;
 		this._comboboxFont.value = formData.fontFamily;
 		this._inputColor.value = formData.fontColor;
+	},
+
+	subscribe: function (fn) {
+		this._handlers.push(fn);
+	},
+
+	unsubscribe: function (fn) {
+		this._handlers = this._handlers.filter(function (item) {
+			if (item !== fn) {
+				return item;
+			}
+		});
+	},
+
+	fire: function (o, thisObj) {
+		var scope = thisObj || window;
+		this._handlers.forEach(function (item) {
+			item.call(scope, o);
+		});
 	},
 });
 

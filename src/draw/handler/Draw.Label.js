@@ -74,13 +74,17 @@ L.Draw.Label = L.Draw.Marker.extend({
 
 	_cancel: function (e) {
 		this.options.dialogFormLabel.hideDialog();
-		this.disable();
+		if (!this.options.repeatMode) {
+			this.disable();
+		}
 	},
 
 	_confirm: function (e) {
 		this.options.dialogFormLabel.hideDialog();
 		this._fireCreatedEvent(e);
-		this.disable();
+		if (!this.options.repeatMode) {
+			this.disable();
+		}
 	},
 
 	_onClick: function () {
