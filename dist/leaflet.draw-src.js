@@ -1,5 +1,5 @@
 /*
- Leaflet.draw 1.0.4+d0dc764, a plugin that adds drawing and editing tools to Leaflet powered maps.
+ Leaflet.draw 1.0.4+d0e380f, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
 
  https://github.com/Leaflet/Leaflet.draw
@@ -91,10 +91,12 @@ L.DialogLabelClass = L.Class.extend({
 	},
 
 	initialize: function (map, options) {
+		this._handlers = [];
 		this._map = map;
 		L.setOptions(this, options);
 		this._render();
 		this._addEventListener();
+		console.log("initialize");
 	},
 
 	_createDom: function () {
@@ -220,35 +222,41 @@ L.DialogLabelClass = L.Class.extend({
 			isItalic = !isItalic;
 		});
 
-		this._btnConfirm.addEventListener(
-			"click",
-			function () {
-				var formData = {
-					text: self._inputText.value,
-					fontSize: Number.parseInt(self._inputSize.value),
-					fontFamily: self._comboboxFont.value,
-					fontColor: self._inputColor.value,
-					isBold: isBold,
-					isItalic: isItalic,
-				};
-				console.log(formData);
+		this._btnConfirm.addEventListener("click", function () {
+			var formData = {
+				text: self._inputText.value,
+				fontSize: Number.parseInt(self._inputSize.value),
+				fontFamily: self._comboboxFont.value,
+				fontColor: self._inputColor.value,
+				isBold: isBold,
+				isItalic: isItalic,
+			};
+			if (self._marker) {
+				// update
+				L.setOptions(self._marker, formData);
+				self._marker.updateImage();
+				self.hideDialog();
+			} else {
+				// add
 				self._map.fire(L.Draw.Event.FORMLABELCONFIRM, formData);
-			},
-			this
-		);
+			}
+		});
 		this._btnCancel.addEventListener("click", function () {
 			self._map.fire(L.Draw.Event.FORMLABELCANCEL);
+			self.hideDialog();
 		});
 	},
 
 	showDialog: function () {
 		L.DomUtil.setOpacity(this._map.getContainer(), 0.5);
 		this._divTop.style = "display: block";
+		this._inputText.focus();
 	},
 
 	hideDialog: function () {
 		L.DomUtil.setOpacity(this._map.getContainer(), 1);
 		this._divTop.style = "display: none";
+		this._map.getContainer().focus();
 	},
 
 	setValue: function (formData) {
@@ -256,6 +264,10 @@ L.DialogLabelClass = L.Class.extend({
 		this._inputSize.value = formData.fontSize;
 		this._comboboxFont.value = formData.fontFamily;
 		this._inputColor.value = formData.fontColor;
+	},
+
+	setMarker: function (marker) {
+		this._marker = marker;
 	},
 });
 
@@ -3458,13 +3470,17 @@ L.Draw.Label = L.Draw.Marker.extend({
 
 	_cancel: function (e) {
 		this.options.dialogFormLabel.hideDialog();
-		this.disable();
+		if (!this.options.repeatMode) {
+			this.disable();
+		}
 	},
 
 	_confirm: function (e) {
 		this.options.dialogFormLabel.hideDialog();
 		this._fireCreatedEvent(e);
-		this.disable();
+		if (!this.options.repeatMode) {
+			this.disable();
+		}
 	},
 
 	_onClick: function () {
@@ -4989,9 +5005,6 @@ L.Edit.Label = L.Edit.Marker.extend({
 		this._bindMarker(this._rotateMarker);
 		this._bindMarker(this._marker);
 		this._marker._map.addLayer(this._markerGroup);
-
-		this._marker._map.on(L.Draw.Event.FORMLABELCONFIRM, this._confirm, this);
-		this._marker._map.on(L.Draw.Event.FORMLABELCANCEL, this._cancel, this);
 	},
 
 	removeHooks: function () {
@@ -5000,9 +5013,6 @@ L.Edit.Label = L.Edit.Marker.extend({
 		this._unbindMarker(this._marker);
 		this._marker._map.removeLayer(this._markerGroup);
 		delete this._markerGroup;
-
-		this._marker._map.off(L.Draw.Event.FORMLABELCONFIRM, this._confirm, this);
-		this._marker._map.off(L.Draw.Event.FORMLABELCANCEL, this._cancel, this);
 	},
 
 	_cancel: function (e) {
@@ -5044,11 +5054,6 @@ L.Edit.Label = L.Edit.Marker.extend({
 			.on("dragstart", this._onMarkerDragStart, this)
 			.on("drag", this._onMarkerDrag, this)
 			.on("dragend", this._onMarkerDragEnd, this);
-		// .on("touchstart", this._onTouchStart, this)
-		// .on("touchmove", this._onTouchMove, this)
-		// .on("MSPointerMove", this._onTouchMove, this)
-		// .on("touchend", this._onTouchEnd, this)
-		// .on("MSPointerUp", this._onTouchEnd, this);
 	},
 
 	_unbindMarker: function (marker) {
@@ -5062,7 +5067,12 @@ L.Edit.Label = L.Edit.Marker.extend({
 
 	_onClick: function (e) {
 		this.options.dialogFormLabel.setValue(this._marker.options);
+		this.options.dialogFormLabel.setMarker(this._marker);
 		this.options.dialogFormLabel.showDialog();
+	},
+
+	_confirmOrCancel: function (e) {
+		console.log("_confirmOrCancel");
 	},
 
 	_onMarkerDragStart: function (e) {

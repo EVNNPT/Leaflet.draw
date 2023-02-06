@@ -164,11 +164,19 @@ L.DialogLabelClass = L.Class.extend({
 				isBold: isBold,
 				isItalic: isItalic,
 			};
-			self._map.fire(L.Draw.Event.FORMLABELCONFIRM, formData);
-			self.fire();
+			if (self._marker) {
+				// update
+				L.setOptions(self._marker, formData);
+				self._marker.updateImage();
+				self.hideDialog();
+			} else {
+				// add
+				self._map.fire(L.Draw.Event.FORMLABELCONFIRM, formData);
+			}
 		});
 		this._btnCancel.addEventListener("click", function () {
 			self._map.fire(L.Draw.Event.FORMLABELCANCEL);
+			self.hideDialog();
 		});
 	},
 
@@ -191,23 +199,8 @@ L.DialogLabelClass = L.Class.extend({
 		this._inputColor.value = formData.fontColor;
 	},
 
-	subscribe: function (fn) {
-		this._handlers.push(fn);
-	},
-
-	unsubscribe: function (fn) {
-		this._handlers = this._handlers.filter(function (item) {
-			if (item !== fn) {
-				return item;
-			}
-		});
-	},
-
-	fire: function (o, thisObj) {
-		var scope = thisObj || window;
-		this._handlers.forEach(function (item) {
-			item.call(scope, o);
-		});
+	setMarker: function (marker) {
+		this._marker = marker;
 	},
 });
 

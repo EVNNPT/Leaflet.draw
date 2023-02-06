@@ -87,9 +87,8 @@ L.Edit.Label = L.Edit.Marker.extend({
 
 	_onClick: function (e) {
 		this.options.dialogFormLabel.setValue(this._marker.options);
-		// this.options.dialogFormLabel.setMarker(this._marker);
+		this.options.dialogFormLabel.setMarker(this._marker);
 		this.options.dialogFormLabel.showDialog();
-		this.options.dialogFormLabel.subscribe(this._confirmOrCancel);
 	},
 
 	_confirmOrCancel: function (e) {
