@@ -87,7 +87,6 @@ L.Draw.Label = L.Draw.Marker.extend({
 
 	_fireCreatedEvent: function (options) {
 		var label = L.label(this._mouseMarker.getLatLng(), options);
-		console.log(label);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, label);
 	},
 });

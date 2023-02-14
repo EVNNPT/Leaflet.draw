@@ -122,9 +122,6 @@
 				drawnItems = L.featureGroup().addTo(map),
 				snapLayerA = L.featureGroup().addTo(map),
 				snapLayerB = L.featureGroup().addTo(map);
-
-			map.setDialogFormLabel(L.dialogLabelClass(map));
-			var dialogFormLabel = map.getDialogFormLabel();
 			L.control
 				.layers(
 					{},
@@ -174,7 +171,6 @@
 					guideLayers: [snapLayerA, snapLayerB],
 					snapDistance: 10,
 					repeatMode: true,
-					dialogFormLabel: dialogFormLabel,
 				},
 				duongDay: {
 					guideLayers: [snapLayerA, snapLayerB],
@@ -289,20 +285,6 @@
 					options: options,
 				});
 			});
-
-			// drawnItems.addLayer(
-			// 	L.role(L.latLng(0, 0), { guideLayers: [snapLayerA, snapLayerB] })
-			// );
-
-			// L.guideLayer(map, {
-			// 	height: 50,
-			// 	width: 50,
-			// 	layer: snapLayerA,
-			// 	zoom: 18,
-			// });
-			// L.Edit.Label.addInitHook(function () {
-			// 	this.options.dialogFormLabel = dialogFormLabel;
-			// });
 		</script>
 	</body>
 </html>
