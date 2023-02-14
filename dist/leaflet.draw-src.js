@@ -1,66 +1,72 @@
 /*
- Leaflet.draw 1.0.4+3e09e08, a plugin that adds drawing and editing tools to Leaflet powered maps.
+ Leaflet.draw 1.0.4+fc1f9ed, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
 
  https://github.com/Leaflet/Leaflet.draw
  http://leafletjs.com
  */
-(function (window, document, undefined) {(function() {
-    // save these original methods before they are overwritten
-    var proto_initIcon = L.Marker.prototype._initIcon;
-    var proto_setPos = L.Marker.prototype._setPos;
+(function (window, document, undefined) {(function () {
+	// save these original methods before they are overwritten
+	var proto_initIcon = L.Marker.prototype._initIcon;
+	var proto_setPos = L.Marker.prototype._setPos;
 
-    var oldIE = (L.DomUtil.TRANSFORM === 'msTransform');
+	var oldIE = L.DomUtil.TRANSFORM === "msTransform";
 
-    L.Marker.addInitHook(function () {
-        var iconOptions = this.options.icon && this.options.icon.options;
-        var iconAnchor = iconOptions && this.options.icon.options.iconAnchor;
-        if (iconAnchor) {
-            iconAnchor = (iconAnchor[0] + 'px ' + iconAnchor[1] + 'px');
-        }
-        this.options.rotationOrigin = this.options.rotationOrigin || iconAnchor || 'center bottom' ;
-        this.options.rotationAngle = this.options.rotationAngle || 0;
+	L.Marker.addInitHook(function () {
+		var iconOptions = this.options.icon && this.options.icon.options;
+		var iconAnchor = iconOptions && this.options.icon.options.iconAnchor;
+		if (iconAnchor) {
+			iconAnchor = iconAnchor[0] + "px " + iconAnchor[1] + "px";
+		}
+		this.options.rotationOrigin =
+			this.options.rotationOrigin || iconAnchor || "center bottom";
+		this.options.rotationAngle = this.options.rotationAngle || 0;
 
-        // Ensure marker keeps rotated during dragging
-        this.on('drag', function(e) { e.target._applyRotation(); });
-    });
+		// Ensure marker keeps rotated during dragging
+		this.on("drag", function (e) {
+			e.target._applyRotation();
+		});
+	});
 
-    L.Marker.include({
-        _initIcon: function() {
-            proto_initIcon.call(this);
-        },
+	L.Marker.include({
+		_initIcon: function () {
+			proto_initIcon.call(this);
+		},
 
-        _setPos: function (pos) {
-            proto_setPos.call(this, pos);
-            this._applyRotation();
-        },
+		_setPos: function (pos) {
+			proto_setPos.call(this, pos);
+			this._applyRotation();
+		},
 
-        _applyRotation: function () {
-            if(this.options.rotationAngle) {
-                this._icon.style[L.DomUtil.TRANSFORM+'Origin'] = this.options.rotationOrigin;
+		_applyRotation: function () {
+			if (this.options.rotationAngle) {
+				this._icon.style[L.DomUtil.TRANSFORM + "Origin"] =
+					this.options.rotationOrigin;
 
-                if(oldIE) {
-                    // for IE 9, use the 2D rotation
-                    this._icon.style[L.DomUtil.TRANSFORM] = 'rotate(' + this.options.rotationAngle + 'deg)';
-                } else {
-                    // for modern browsers, prefer the 3D accelerated version
-                    this._icon.style[L.DomUtil.TRANSFORM] += ' rotateZ(' + this.options.rotationAngle + 'deg)';
-                }
-            }
-        },
+				if (oldIE) {
+					// for IE 9, use the 2D rotation
+					this._icon.style[L.DomUtil.TRANSFORM] =
+						"rotate(" + this.options.rotationAngle + "deg)";
+				} else {
+					// for modern browsers, prefer the 3D accelerated version
+					this._icon.style[L.DomUtil.TRANSFORM] +=
+						" rotateZ(" + this.options.rotationAngle + "deg)";
+				}
+			}
+		},
 
-        setRotationAngle: function(angle) {
-            this.options.rotationAngle = angle;
-            this.update();
-            return this;
-        },
+		setRotationAngle: function (angle) {
+			this.options.rotationAngle = angle;
+			this.update();
+			return this;
+		},
 
-        setRotationOrigin: function(origin) {
-            this.options.rotationOrigin = origin;
-            this.update();
-            return this;
-        }
-    });
+		setRotationOrigin: function (origin) {
+			this.options.rotationOrigin = origin;
+			this.update();
+			return this;
+		},
+	});
 })();
 
 
@@ -3504,6 +3510,7 @@ L.Draw.Label = L.Draw.Marker.extend({
 
 	_fireCreatedEvent: function (options) {
 		var label = L.label(this._mouseMarker.getLatLng(), options);
+		console.log(label);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, label);
 	},
 });
@@ -3527,7 +3534,6 @@ L.Edit.Marker = L.Handler.extend({
 	// Add listener hooks to this handler
 	addHooks: function () {
 		var marker = this._marker;
-
 		marker.dragging.enable();
 		marker.on("dragend", this._onDragEnd, marker);
 		this._toggleMarkerHighlight();
@@ -3537,7 +3543,6 @@ L.Edit.Marker = L.Handler.extend({
 	// Remove listener hooks from this handler
 	removeHooks: function () {
 		var marker = this._marker;
-
 		marker.dragging.disable();
 		marker.off("dragend", this._onDragEnd, marker);
 		this._toggleMarkerHighlight();
@@ -4993,19 +4998,20 @@ L.Edit.Label = L.Edit.Marker.extend({
 			iconSize: new L.Point(20, 20),
 			className: "leaflet-div-icon leaflet-editing-icon leaflet-edit-move",
 		}),
-		dialogFormLabel: null,
 	},
 
 	initialize: function (marker, options) {
 		this._marker = marker;
 		L.Util.setOptions(this, options);
-		L.Edit.Marker.prototype.initialize.call(this, marker, options);
+		// L.Edit.Marker.prototype.initialize.call(this, marker, options);
 	},
 
 	addHooks: function () {
-		L.Edit.Marker.prototype.addHooks.call(this);
+		this._toggleMarkerHighlight();
 		this._createRotateMarker();
+		this._createMoveMarker();
 		this._bindMarker(this._rotateMarker);
+		this._bindMarker(this._moveMarker);
 		this._bindMarker(this._marker);
 		this._marker._map.addLayer(this._markerGroup);
 		this._marker._map.on(
@@ -5016,8 +5022,9 @@ L.Edit.Label = L.Edit.Marker.extend({
 	},
 
 	removeHooks: function () {
-		L.Edit.Marker.prototype.removeHooks.call(this);
+		this._toggleMarkerHighlight();
 		this._unbindMarker(this._rotateMarker);
+		this._unbindMarker(this._moveMarker);
 		this._unbindMarker(this._marker);
 		this._marker._map.removeLayer(this._markerGroup);
 		this._marker._map.off(
@@ -5035,6 +5042,13 @@ L.Edit.Label = L.Edit.Marker.extend({
 		}
 	},
 
+	_createMoveMarker: function () {
+		this._moveMarker = this._createMarker(
+			this._marker.getLatLng(),
+			this.options.moveIcon
+		);
+	},
+
 	_createRotateMarker: function () {
 		this._rotateMarker = this._createMarker(
 			this._marker.getRotateMarker(),
@@ -5049,12 +5063,10 @@ L.Edit.Label = L.Edit.Marker.extend({
 			icon: icon,
 			zIndexOffset: 10,
 		});
-
 		if (!this._markerGroup) {
 			this._markerGroup = new L.LayerGroup();
 		}
 		this._markerGroup.addLayer(marker);
-
 		return marker;
 	},
 
@@ -5076,11 +5088,15 @@ L.Edit.Label = L.Edit.Marker.extend({
 	},
 
 	_onClick: function (e) {
-		this._marker._map.fire(L.Draw.Event.STARTEDITLABEL, this._marker);
+		var marker = e.target;
+		if (marker === this._marker) {
+			this._marker._map.fire(L.Draw.Event.STARTEDITLABEL, this._marker);
+		}
 	},
 
 	_onMarkerDragStart: function (e) {
 		var marker = e.target;
+		if (marker === this._marker) return;
 		if (marker !== this._marker) {
 			marker.setOpacity(0);
 		}
@@ -5090,18 +5106,21 @@ L.Edit.Label = L.Edit.Marker.extend({
 	_onMarkerDrag: function (e) {
 		var marker = e.target,
 			latlng = marker.getLatLng();
-
+		if (marker === this._marker) return;
 		if (marker === this._rotateMarker) {
+			// Rotate
 			this._rotate(latlng);
-		} else if (marker === this._marker) {
+		} else if (marker === this._moveMarker) {
+			// Move marker
+			this._marker.setLatLng(this._moveMarker.getLatLng());
 			this._rotateMarker.setLatLng(this._marker.getRotateMarker());
 		}
-
 		this._marker.fire("editdrag");
 	},
 
 	_onMarkerDragEnd: function (e) {
 		var marker = e.target;
+		if (marker === this._marker) return;
 		marker.setOpacity(1);
 		this._fireEdit();
 	},
