@@ -10,39 +10,55 @@ L.Edit.Label = L.Edit.Marker.extend({
 			iconSize: new L.Point(20, 20),
 			className: "leaflet-div-icon leaflet-editing-icon leaflet-edit-move",
 		}),
-		dialogFormLabel: null,
 	},
 
 	initialize: function (marker, options) {
 		this._marker = marker;
 		L.Util.setOptions(this, options);
-		L.Edit.Marker.prototype.initialize.call(this, marker, options);
+		// L.Edit.Marker.prototype.initialize.call(this, marker, options);
 	},
 
 	addHooks: function () {
-		L.Edit.Marker.prototype.addHooks.call(this);
+		this._toggleMarkerHighlight();
 		this._createRotateMarker();
+		this._createMoveMarker();
 		this._bindMarker(this._rotateMarker);
+		this._bindMarker(this._moveMarker);
 		this._bindMarker(this._marker);
 		this._marker._map.addLayer(this._markerGroup);
+		this._marker._map.on(
+			L.Draw.Event.FINISHEDITLABEL,
+			this._finishEditLabel,
+			this
+		);
 	},
 
 	removeHooks: function () {
-		L.Edit.Marker.prototype.removeHooks.call(this);
+		this._toggleMarkerHighlight();
 		this._unbindMarker(this._rotateMarker);
+		this._unbindMarker(this._moveMarker);
 		this._unbindMarker(this._marker);
 		this._marker._map.removeLayer(this._markerGroup);
+		this._marker._map.off(
+			L.Draw.Event.FINISHEDITLABEL,
+			this._finishEditLabel,
+			this
+		);
 		delete this._markerGroup;
 	},
 
-	_cancel: function (e) {
-		this.options.dialogFormLabel.hideDialog();
+	_finishEditLabel: function (e) {
+		if (L.Util.stamp(e.marker) === L.Util.stamp(this._marker)) {
+			L.setOptions(e.marker, e.options);
+			e.marker.updateImage();
+		}
 	},
 
-	_confirm: function (e) {
-		L.setOptions(this._marker, e);
-		this._marker.updateImage();
-		this.options.dialogFormLabel.hideDialog();
+	_createMoveMarker: function () {
+		this._moveMarker = this._createMarker(
+			this._marker.getLatLng(),
+			this.options.moveIcon
+		);
 	},
 
 	_createRotateMarker: function () {
@@ -59,12 +75,10 @@ L.Edit.Label = L.Edit.Marker.extend({
 			icon: icon,
 			zIndexOffset: 10,
 		});
-
 		if (!this._markerGroup) {
 			this._markerGroup = new L.LayerGroup();
 		}
 		this._markerGroup.addLayer(marker);
-
 		return marker;
 	},
 
@@ -86,17 +100,15 @@ L.Edit.Label = L.Edit.Marker.extend({
 	},
 
 	_onClick: function (e) {
-		this.options.dialogFormLabel.setValue(this._marker.options);
-		this.options.dialogFormLabel.setMarker(this._marker);
-		this.options.dialogFormLabel.showDialog();
-	},
-
-	_confirmOrCancel: function (e) {
-		console.log("_confirmOrCancel");
+		var marker = e.target;
+		if (marker === this._marker) {
+			this._marker._map.fire(L.Draw.Event.STARTEDITLABEL, this._marker);
+		}
 	},
 
 	_onMarkerDragStart: function (e) {
 		var marker = e.target;
+		if (marker === this._marker) return;
 		if (marker !== this._marker) {
 			marker.setOpacity(0);
 		}
@@ -106,18 +118,21 @@ L.Edit.Label = L.Edit.Marker.extend({
 	_onMarkerDrag: function (e) {
 		var marker = e.target,
 			latlng = marker.getLatLng();
-
+		if (marker === this._marker) return;
 		if (marker === this._rotateMarker) {
+			// Rotate
 			this._rotate(latlng);
-		} else if (marker === this._marker) {
+		} else if (marker === this._moveMarker) {
+			// Move marker
+			this._marker.setLatLng(this._moveMarker.getLatLng());
 			this._rotateMarker.setLatLng(this._marker.getRotateMarker());
 		}
-
 		this._marker.fire("editdrag");
 	},
 
 	_onMarkerDragEnd: function (e) {
 		var marker = e.target;
+		if (marker === this._marker) return;
 		marker.setOpacity(1);
 		this._fireEdit();
 	},

@@ -122,7 +122,9 @@
 				drawnItems = L.featureGroup().addTo(map),
 				snapLayerA = L.featureGroup().addTo(map),
 				snapLayerB = L.featureGroup().addTo(map);
-			var dialogFormLabel = L.dialogLabelClass(map);
+
+			map.setDialogFormLabel(L.dialogLabelClass(map));
+			var dialogFormLabel = map.getDialogFormLabel();
 			L.control
 				.layers(
 					{},
@@ -261,6 +263,33 @@
 				}
 			});
 
+			map.on(L.Draw.Event.STARTDRAWLABEL, function () {
+				var options = {
+					text: "C#",
+					fontSize: 14,
+					fontFamily: "Times New Roman",
+					fontColor: "red",
+					isBold: false,
+					isItalic: false,
+				};
+				map.fire(L.Draw.Event.FINISHDRAWLABEL, options);
+			});
+
+			map.on(L.Draw.Event.STARTEDITLABEL, function (marker) {
+				var options = {
+					text: "C# FIX",
+					fontSize: 14,
+					fontFamily: "Times New Roman",
+					fontColor: "red",
+					isBold: false,
+					isItalic: false,
+				};
+				map.fire(L.Draw.Event.FINISHEDITLABEL, {
+					marker: marker,
+					options: options,
+				});
+			});
+
 			// drawnItems.addLayer(
 			// 	L.role(L.latLng(0, 0), { guideLayers: [snapLayerA, snapLayerB] })
 			// );
@@ -271,9 +300,9 @@
 			// 	layer: snapLayerA,
 			// 	zoom: 18,
 			// });
-			L.Edit.Label.addInitHook(function () {
-				this.options.dialogFormLabel = dialogFormLabel;
-			});
+			// L.Edit.Label.addInitHook(function () {
+			// 	this.options.dialogFormLabel = dialogFormLabel;
+			// });
 		</script>
 	</body>
 </html>

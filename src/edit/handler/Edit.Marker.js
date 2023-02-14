@@ -15,7 +15,6 @@ L.Edit.Marker = L.Handler.extend({
 	// Add listener hooks to this handler
 	addHooks: function () {
 		var marker = this._marker;
-
 		marker.dragging.enable();
 		marker.on("dragend", this._onDragEnd, marker);
 		this._toggleMarkerHighlight();
@@ -25,7 +24,6 @@ L.Edit.Marker = L.Handler.extend({
 	// Remove listener hooks from this handler
 	removeHooks: function () {
 		var marker = this._marker;
-
 		marker.dragging.disable();
 		marker.off("dragend", this._onDragEnd, marker);
 		this._toggleMarkerHighlight();

@@ -196,3 +196,11 @@ L.Draw.Event.MARKERCONTEXT = "draw:markercontext";
 
 L.Draw.Event.FORMLABELCONFIRM = "draw:formlabelconfirm";
 L.Draw.Event.FORMLABELCANCEL = "draw:formlabelcancel";
+
+L.Draw.Event.STARTDRAWLABEL = "draw:startdrawlabel";
+L.Draw.Event.FINISHDRAWLABEL = "draw:finishdrawlabel";
+L.Draw.Event.CANCELDRAWLABEL = "draw:canceldrawlabel";
+
+L.Draw.Event.STARTEDITLABEL = "edit:starteditlabel";
+L.Draw.Event.FINISHEDITLABEL = "edit:finisheditlabel";
+L.Draw.Event.CANCELEDITLABEL = "edit:canceleditlabel";

@@ -61,34 +61,16 @@ L.Draw.Label = L.Draw.Marker.extend({
 			this._map.on("mousemove", this._onMouseMove, this);
 			this._map.on("click", this._onTouch, this);
 		}
-
-		this._map.on(L.Draw.Event.FORMLABELCONFIRM, this._confirm, this);
-		this._map.on(L.Draw.Event.FORMLABELCANCEL, this._cancel, this);
+		this._map.on(L.Draw.Event.FINISHDRAWLABEL, this._fireCreatedEvent, this);
 	},
 
 	removeHooks: function () {
 		L.Draw.Marker.prototype.removeHooks.call(this);
-		this._map.off(L.Draw.Event.FORMLABELCONFIRM, this._confirm, this);
-		this._map.off(L.Draw.Event.FORMLABELCANCEL, this._cancel, this);
-	},
-
-	_cancel: function (e) {
-		this.options.dialogFormLabel.hideDialog();
-		if (!this.options.repeatMode) {
-			this.disable();
-		}
-	},
-
-	_confirm: function (e) {
-		this.options.dialogFormLabel.hideDialog();
-		this._fireCreatedEvent(e);
-		if (!this.options.repeatMode) {
-			this.disable();
-		}
+		this._map.off(L.Draw.Event.FINISHDRAWLABEL, this._fireCreatedEvent, this);
 	},
 
 	_onClick: function () {
-		this.options.dialogFormLabel.showDialog();
+		this._map.fire(L.Draw.Event.STARTDRAWLABEL);
 	},
 
 	_onTouch: function (e) {
@@ -105,6 +87,7 @@ L.Draw.Label = L.Draw.Marker.extend({
 
 	_fireCreatedEvent: function (options) {
 		var label = L.label(this._mouseMarker.getLatLng(), options);
+		console.log(label);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, label);
 	},
 });

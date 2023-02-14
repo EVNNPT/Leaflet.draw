@@ -1,3 +1,12 @@
+L.Map.include({
+	setDialogFormLabel: function (dialogForm) {
+		this._dialogFormLabel = dialogForm;
+	},
+	getDialogFormLabel: function () {
+		return this._dialogFormLabel;
+	},
+});
+
 L.DialogLabelClass = L.Class.extend({
 	options: {
 		divTopClass: "div-top",
@@ -21,6 +30,7 @@ L.DialogLabelClass = L.Class.extend({
 			"Lucida Console",
 			"Monaco",
 		],
+		id: null,
 	},
 
 	initialize: function (map, options) {
@@ -29,7 +39,6 @@ L.DialogLabelClass = L.Class.extend({
 		L.setOptions(this, options);
 		this._render();
 		this._addEventListener();
-		console.log("initialize");
 	},
 
 	_createDom: function () {
@@ -140,7 +149,11 @@ L.DialogLabelClass = L.Class.extend({
 	},
 
 	_render: function () {
-		this._map.getContainer().parentElement.appendChild(this._createDom());
+		if (this.options.id) {
+			document.getElementById(this.options.id).appendChild(this._createDom());
+		} else {
+			this._map.getContainer().parentElement.appendChild(this._createDom());
+		}
 	},
 
 	_addEventListener: function () {
