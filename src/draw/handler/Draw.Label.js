@@ -12,18 +12,6 @@ L.Draw.Label = L.Draw.Marker.extend({
 		icon: new L.Icon.Default(),
 		repeatMode: false,
 		zIndexOffset: 2000, // This should be > than the highest z-index any markers
-		forms: {
-			id: "divTop",
-			btnBold: "btnBold",
-			btnItalic: "btnItalic",
-			btnOK: "btnOK",
-			btnCancel: "btnCancel",
-			inputText: "text-val",
-			comboboxFont: "font-val",
-			inputSize: "size-val",
-			inputColor: "color-val",
-		},
-		dialogFormLabel: null,
 	},
 
 	// @method initialize(): void
@@ -32,7 +20,7 @@ L.Draw.Label = L.Draw.Marker.extend({
 
 		L.Draw.Marker.prototype.initialize.call(this, map, options);
 
-		this.type = L.Draw.Label.TYPE;
+		// this.type = L.Draw.Label.TYPE;
 
 		this._initialLabelText = L.drawLocal.draw.handlers.label.tooltip.start;
 	},
@@ -70,6 +58,7 @@ L.Draw.Label = L.Draw.Marker.extend({
 	},
 
 	_onClick: function () {
+		this._latlng = this._mouseMarker.getLatLng();
 		this._map.fire(L.Draw.Event.STARTDRAWLABEL);
 	},
 
@@ -86,7 +75,8 @@ L.Draw.Label = L.Draw.Marker.extend({
 	},
 
 	_fireCreatedEvent: function (options) {
-		var label = L.label(this._mouseMarker.getLatLng(), options);
+		var label = L.label(this._latlng, options);
+		// label.addTo(this._map);
 		L.Draw.Feature.prototype._fireCreatedEvent.call(this, label);
 	},
 });
