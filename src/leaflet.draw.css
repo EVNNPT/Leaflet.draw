@@ -149,6 +149,30 @@
 /* Draw toolbar
 /* ================================================================== */
 
+.leaflet-draw-toolbar .leaflet-draw-draw-thanhCai {
+	background-position: -2px -2px;
+}
+
+.leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-thanhCai {
+	background-position: 0 -1px;
+}
+
+.leaflet-draw-toolbar .leaflet-draw-draw-role {
+	background-position: -31px -2px;
+}
+
+.leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-role {
+	background-position: -29px -1px;
+}
+
+.leaflet-draw-toolbar .leaflet-draw-draw-mayBienAp {
+	background-position: -31px -2px;
+}
+
+.leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-mayBienAp {
+	background-position: -29px -1px;
+}
+
 .leaflet-draw-toolbar .leaflet-draw-draw-polyline {
 	background-position: -2px -2px;
 }

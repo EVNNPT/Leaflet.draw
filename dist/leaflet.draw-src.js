@@ -1,5 +1,5 @@
 /*
- Leaflet.draw 1.0.4+c15a9d9, a plugin that adds drawing and editing tools to Leaflet powered maps.
+ Leaflet.draw 1.0.4+b437574, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
 
  https://github.com/Leaflet/Leaflet.draw
@@ -684,11 +684,33 @@ L.Label = L.Marker.extend({
 		font += this.options.fontSize + "px ";
 		font += this.options.fontFamily;
 		ctx.font = font;
-		canvas.width = ctx.measureText(this.options.text).width + 20;
-		canvas.height = this.options.fontSize + 20;
+		var lines = this.options.text.split('\n');
+		var maxWidth = 0;
+		var lineheight = this.options.fontSize;
+		if(lines.length == 1){
+			lineheight += 15;
+		}
+		for (var i = 0; i < lines.length; i++)
+		{
+			if(maxWidth < ctx.measureText(lines[i]).width){
+				maxWidth = ctx.measureText(lines[i]).width + 20;
+			}
+			lineheight += this.options.fontSize;
+		}
+		canvas.width = maxWidth;
+		canvas.height = lineheight;
 		ctx.font = font;
 		ctx.fillStyle = this.options.fontColor;
-		ctx.fillText(this.options.text, 10, this.options.fontSize);
+		for (var i = 0; i < lines.length; i++)
+		{
+			ctx.textAlign = 'center';
+    		ctx.fillText(lines[i], maxWidth/2, this.options.fontSize + (i*this.options.fontSize));
+		}
+		// canvas.width = ctx.measureText(this.options.text).width + 20;
+		// canvas.height = this.options.fontSize + 20;
+		// ctx.font = font;
+		// ctx.fillStyle = this.options.fontColor;
+		// ctx.fillText(this.options.text, 10, this.options.fontSize);
 		return [canvas.toDataURL("image/png"), canvas.width, canvas.height];
 	},
 
